@@ -5,7 +5,7 @@ const Home = () => {
 
   return (
     <div>
-      <h1>Welcome, {user?.email || "Guest"}!</h1>
+      <h1>Welcome, {user?.user_metadata.username || "Guest"}!</h1>
     </div>
   );
 };

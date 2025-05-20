@@ -10,22 +10,58 @@ export async function signUpWithEmail({
     password: string;
     username: string;
 }) {
-    const { data, error } = await supabase.auth.signUp({
+    // 1. Check if username already exists in 'users' table
+    const { data: existingUsers, error: fetchError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("username", username)
+        .limit(1)
+        .maybeSingle();
+
+    if (fetchError) {
+        throw new Error("Failed to check username uniqueness: " + fetchError.message);
+    }
+
+    if (existingUsers) {
+        throw new Error("Username already taken. Please choose another.");
+    }
+
+    // 2. Sign up user in Supabase Auth
+    const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-            data: {
-                username,
-            },
+            data: { username },
         },
     });
 
-    if (error) {
-        throw new Error(error.message);
+    if (signUpError) {
+        throw new Error(signUpError.message);
+    }
+
+    if (!data.user) {
+        throw new Error("User signup failed: no user returned.");
+    }
+
+    // 3. Insert user info into your 'users' table
+    const { id } = data.user;
+
+    const { error: insertError } = await supabase.from("users").insert([
+        {
+            id,
+            email,
+            username,
+        },
+    ]);
+
+    if (insertError) {
+        // Optional: You could consider rolling back auth user here if insert fails
+        throw new Error("Failed to insert user profile: " + insertError.message);
     }
 
     return data;
 }
+
 
 
 // This function is used to sign in a user with their email and password in supabase
