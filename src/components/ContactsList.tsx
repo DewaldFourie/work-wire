@@ -42,7 +42,8 @@ const ContactsList = ({ currentUserId, onSelectContact }: Props) => {
 
     return (
         <div className="p-4 space-y-2">
-            <h2 className="text-xl font-semibold mb-4">Contacts</h2>
+            <h2 className="text-xl font-semibold">Contacts</h2>
+            <hr className="border-t border-gray-300 dark:border-gray-700 mb-4" />
             {contacts.length === 0 ? (
                 <div className="text-gray-500 dark:text-gray-400">No other users found.</div>
             ) : (
@@ -53,7 +54,11 @@ const ContactsList = ({ currentUserId, onSelectContact }: Props) => {
                             <li
                                 key={contact.id}
                                 onClick={() => handleSelect(contact)}
-                                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition ${isActive ? "bg-blue-100 dark:bg-blue-900": "hover:bg-gray-100 dark:hover:bg-gray-800"}`}
+                                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition
+                                ${isActive
+                                        ? "bg-blue-100 dark:bg-blue-900"
+                                        : "bg-gray-100 dark:bg-gray-900"
+                                    }`}
                             >
                                 <img
                                     src={contact.profile_image_url || "/default-image.jpg"}
@@ -75,6 +80,8 @@ const ContactsList = ({ currentUserId, onSelectContact }: Props) => {
             )}
         </div>
     );
+
+
 };
 
 export default ContactsList;
