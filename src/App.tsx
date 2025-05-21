@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import MainLayout from "./layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -23,7 +24,8 @@ function App() {
           }
         >
           <Route index element={<Home />} />
-          {/* Add more nested protected routes here */}
+          <Route path="/profile/:id" element={<Profile />} />
+
         </Route>
       </Routes>
     </BrowserRouter>
