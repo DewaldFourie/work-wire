@@ -136,7 +136,8 @@ export default function Profile() {
 
         // 1. Delete old image if it exists
         if (profile.profile_image_url) {
-            const urlPrefix = "https://ijlrhyjgwxqixznoiuhe.supabase.co/storage/v1/object/public/profile-images/profile/avatar/";
+            const supabaseURLPrefix = import.meta.env.VITE_SUPABASE_STORAGE_URL_PREFIX!;
+            const urlPrefix = `${supabaseURLPrefix}avatar/`;
             const fileName = profile.profile_image_url.replace(urlPrefix, '');
             const filePath = `profile/avatar/${fileName}`; // Include the folder here for the remove() call
 
@@ -201,7 +202,8 @@ export default function Profile() {
 
         // 1. Delete old cover image if it exists
         if (profile.cover_image_url) {
-            const urlPrefix = `https://ijlrhyjgwxqixznoiuhe.supabase.co/storage/v1/object/public/profile-images/profile/cover/`;
+            const supabaseURLPrefix = import.meta.env.VITE_SUPABASE_STORAGE_URL_PREFIX!;
+            const urlPrefix = `${supabaseURLPrefix}cover/`;
             const oldFilePath = profile.cover_image_url.replace(urlPrefix, '');
 
             const { error: deleteError } = await supabase.storage
