@@ -8,8 +8,6 @@ import { motion } from "framer-motion";
 import Modal from "../components/Modal";
 
 
-import clsx from "clsx";
-
 type UserProfile = {
     id: string;
     username: string;
@@ -23,11 +21,6 @@ type UserProfile = {
     about: string | null;
 };
 
-type ModalProps = {
-    isOpen: boolean;
-    onClose: () => void;
-    children: React.ReactNode;
-};
 
 export default function Profile() {
     const { user } = useAuth();
@@ -45,6 +38,7 @@ export default function Profile() {
     const [skill3, setSkill3] = useState(profile?.skills?.split(",")[2]?.trim() || "");
     const [about, setAbout] = useState(profile?.about || '');
     const [selectedProfileImage, setSelectedProfileImage] = useState<File | null>(null);
+    const [selectedCoverImage, setSelectedCoverImage] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
 
     // Check if the profile belongs to the logged-in user
@@ -198,6 +192,68 @@ export default function Profile() {
         setUploading(false);
     };
 
+    // Function to handle the uploading of cover image
+    // Function to handle the uploading of cover image
+    const handleCoverImageUpload = async () => {
+        if (!selectedCoverImage || !profile) return;
+
+        setUploading(true);
+
+        // 1. Delete old cover image if it exists
+        if (profile.cover_image_url) {
+            const urlPrefix = `https://ijlrhyjgwxqixznoiuhe.supabase.co/storage/v1/object/public/profile-images/profile/cover/`;
+            const oldFilePath = profile.cover_image_url.replace(urlPrefix, '');
+
+            const { error: deleteError } = await supabase.storage
+                .from('profile-images')
+                .remove([`profile/cover/${oldFilePath}`]);
+
+            if (deleteError) {
+                console.warn("Could not delete old cover image:", deleteError.message);
+            }
+        }
+
+        // 2. Upload new cover image
+        const fileExt = selectedCoverImage.name.split('.').pop();
+        const fileName = `${profile.id}-${Date.now()}.${fileExt}`;
+        const filePath = `profile/cover/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('profile-images')
+            .upload(filePath, selectedCoverImage, {
+                cacheControl: '3600',
+                upsert: false,
+            });
+
+        if (uploadError) {
+            console.error("Upload error:", uploadError.message);
+            setUploading(false);
+            return;
+        }
+
+        // 3. Get public URL of the new cover image
+        const {
+            data: { publicUrl },
+        } = supabase.storage
+            .from('profile-images')
+            .getPublicUrl(filePath);
+
+        // 4. Update user's cover_image_url in Supabase
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ cover_image_url: publicUrl })
+            .eq('id', profile.id);
+
+        if (updateError) {
+            console.error("Update error:", updateError.message);
+        } else {
+            setProfile({ ...profile, cover_image_url: publicUrl });
+            setShowCoverImageModal(false); // optional: close modal
+            setSelectedCoverImage(null);
+        }
+
+        setUploading(false);
+    };
 
 
 
@@ -222,7 +278,8 @@ export default function Profile() {
             >
                 <div className="w-[100%] h-[800px] mx-auto mt-6 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 flex flex-col">
                     {/* Cover Image Section - 1/3 */}
-                    <div className="relative flex-[1.5] bg-gray-300 dark:bg-gray-700">
+                    <div className="relative flex-[1.5] h-1/3 min-h-[240px] max-h-[300px] bg-gray-300 dark:bg-gray-700 overflow-visible">
+                        {/* Cover Image */}
                         {profile.cover_image_url && (
                             <img
                                 src={profile.cover_image_url}
@@ -230,6 +287,8 @@ export default function Profile() {
                                 className="object-cover w-full h-full"
                             />
                         )}
+
+                        {/* Edit Cover Button */}
                         {isOwnProfile && (
                             <button
                                 className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
@@ -239,6 +298,7 @@ export default function Profile() {
                                 Edit Cover
                             </button>
                         )}
+
                         {/* Profile Picture */}
                         <div className="absolute bottom-[-75px] left-10 h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-white p-1 shadow-md">
                             <img
@@ -254,15 +314,15 @@ export default function Profile() {
                                 >
                                     <Camera size={18} className="text-gray-800 dark:text-gray-200" />
                                 </button>
-
                             )}
                         </div>
                     </div>
+
                     {/* Bio Section - 2/3 */}
                     <div className="flex-[2.5] p-10 overflow-y-auto">
                         <div className="flex items-start gap-2">
                             {/* Profile image spacer */}
-                            <div className="w-60 shrink-0" />
+                            <div className="w-[12rem] shrink-0" />
                             {/* User details */}
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
@@ -287,7 +347,7 @@ export default function Profile() {
                                 </p>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">
                                     Location:{" "}
-                                    <span className="text-base ml-4 text-gray-700 dark:text-gray-300">
+                                    <span className="text-base ml-7 text-gray-700 dark:text-gray-300">
                                         {profile.location || "No location provided"}
                                     </span>
                                 </p>
@@ -384,22 +444,38 @@ export default function Profile() {
             {/* Cover Image edit Modal */}
             <Modal isOpen={showCoverImageModal} onClose={() => setShowCoverImageModal(false)} maxWidthClass="max-w-md">
                 <div className="max-w-md w-full h-96 bg-white dark:bg-gray-800 p-6 rounded-xl mx-auto flex flex-col">
-                    <h2 className="text-lg font-semibold mb-4 text-center">
-                        Change Cover Image
-                    </h2>
-                    <div className="flex-grow flex items-center justify-center">
-                        <input type="file" accept="image/*" className="block" />
+                    <h2 className="text-lg font-semibold mb-4 text-center">Change Cover Image</h2>
+
+                    <div className="flex-grow flex flex-col items-center justify-center gap-4">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setSelectedCoverImage(e.target.files?.[0] || null)}
+                            className="block"
+                        />
+                        {selectedCoverImage && (
+                            <p className="text-sm text-gray-600 dark:text-gray-300">{selectedCoverImage.name}</p>
+                        )}
                     </div>
-                    <div className="mt-6 flex justify-end">
+
+                    <div className="mt-6 flex justify-end gap-3">
                         <button
                             onClick={() => setShowCoverImageModal(false)}
                             className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
                         >
-                            Close
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleCoverImageUpload}
+                            disabled={!selectedCoverImage || uploading}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                        >
+                            {uploading ? "Uploading..." : "Save"}
                         </button>
                     </div>
                 </div>
             </Modal>
+
             {/* Edit Details Modal */}
             <Modal isOpen={showEditDetailsModal} onClose={() => setShowEditDetailsModal(false)} maxWidthClass="max-w-md">
                 <div className="max-w-md w-full h-[420px] bg-white dark:bg-gray-800 p-6 rounded-xl mx-auto flex flex-col">
