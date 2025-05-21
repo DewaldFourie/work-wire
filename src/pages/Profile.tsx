@@ -44,7 +44,8 @@ export default function Profile() {
     const [skill2, setSkill2] = useState(profile?.skills?.split(",")[1]?.trim() || "");
     const [skill3, setSkill3] = useState(profile?.skills?.split(",")[2]?.trim() || "");
     const [about, setAbout] = useState(profile?.about || '');
-
+    const [selectedProfileImage, setSelectedProfileImage] = useState<File | null>(null);
+    const [uploading, setUploading] = useState(false);
 
     // Check if the profile belongs to the logged-in user
     const isOwnProfile = user && user.id === profile?.id;
@@ -132,6 +133,72 @@ export default function Profile() {
             setShowEditSkillsAboutModal(false);
         }
     };
+
+    // Function to handle the uploading of profile image
+    const handleProfileImageUpload = async () => {
+        if (!selectedProfileImage || !profile) return;
+
+        setUploading(true);
+
+        // 1. Delete old image if it exists
+        if (profile.profile_image_url) {
+            const urlPrefix = "https://ijlrhyjgwxqixznoiuhe.supabase.co/storage/v1/object/public/profile-images/profile/";
+            const fileName = profile.profile_image_url.replace(urlPrefix, '');
+            const filePath = `profile/${fileName}`; // Include the folder here for the remove() call
+
+            const { error: deleteError } = await supabase.storage
+                .from('profile-images')
+                .remove([filePath]);
+
+            if (deleteError) {
+                console.warn("Could not delete old profile image:", deleteError.message);
+            }
+        }
+
+
+        // 2. Upload new image
+        const fileExt = selectedProfileImage.name.split('.').pop();
+        const fileName = `${profile.id}-${Date.now()}.${fileExt}`;
+        const filePath = `profile/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('profile-images')
+            .upload(filePath, selectedProfileImage, {
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (uploadError) {
+            console.error("Upload error:", uploadError.message);
+            setUploading(false);
+            return;
+        }
+
+        // 3. Get new public URL
+        const {
+            data: { publicUrl },
+        } = supabase.storage
+            .from('profile-images')
+            .getPublicUrl(filePath);
+
+        // 4. Update user record
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ profile_image_url: publicUrl })
+            .eq('id', profile.id);
+
+        if (updateError) {
+            console.error("Update error:", updateError.message);
+        } else {
+            setProfile({ ...profile, profile_image_url: publicUrl });
+            setShowProfileImageModal(false);
+            setSelectedProfileImage(null);
+        }
+
+        setUploading(false);
+    };
+
+
 
 
 
@@ -282,22 +349,38 @@ export default function Profile() {
             {/* Profile Picture edit Modal */}
             <Modal isOpen={showProfileImageModal} onClose={() => setShowProfileImageModal(false)} maxWidthClass="max-w-md">
                 <div className="max-w-md w-full h-96 bg-white dark:bg-gray-800 p-6 rounded-xl mx-auto flex flex-col">
-                    <h2 className="text-lg font-semibold mb-4 text-center">
-                        Change Profile Picture
-                    </h2>
-                    <div className="flex-grow flex items-center justify-center">
-                        <input type="file" accept="image/*" className="block" />
+                    <h2 className="text-lg font-semibold mb-4 text-center">Change Profile Picture</h2>
+
+                    <div className="flex-grow flex flex-col items-center justify-center gap-4">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setSelectedProfileImage(e.target.files?.[0] || null)}
+                            className="block"
+                        />
+                        {selectedProfileImage && (
+                            <p className="text-sm text-gray-600 dark:text-gray-300">{selectedProfileImage.name}</p>
+                        )}
                     </div>
-                    <div className="mt-6 flex justify-end">
+
+                    <div className="mt-6 flex justify-end gap-3">
                         <button
                             onClick={() => setShowProfileImageModal(false)}
                             className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
                         >
-                            Close
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleProfileImageUpload}
+                            disabled={!selectedProfileImage || uploading}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                        >
+                            {uploading ? "Uploading..." : "Save"}
                         </button>
                     </div>
                 </div>
             </Modal>
+
             {/* Cover Image edit Modal */}
             <Modal isOpen={showCoverImageModal} onClose={() => setShowCoverImageModal(false)} maxWidthClass="max-w-md">
                 <div className="max-w-md w-full h-96 bg-white dark:bg-gray-800 p-6 rounded-xl mx-auto flex flex-col">
