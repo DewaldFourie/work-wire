@@ -194,7 +194,6 @@ export default function Profile() {
     };
 
     // Function to handle the uploading of cover image
-    // Function to handle the uploading of cover image
     const handleCoverImageUpload = async () => {
         if (!selectedCoverImage || !profile) return;
 
@@ -256,8 +255,6 @@ export default function Profile() {
 
         setUploading(false);
     };
-
-
 
 
     // Function to handle the saving of skills and about section
