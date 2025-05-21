@@ -40,7 +40,11 @@ export default function Profile() {
     const [profession, setProfession] = useState(profile?.profession || "");
     const [location, setLocation] = useState(profile?.location || "");
     const [githubUrl, setGithubUrl] = useState(profile?.github_url || "");
-    
+    const [skill1, setSkill1] = useState(profile?.skills?.split(",")[0]?.trim() || "");
+    const [skill2, setSkill2] = useState(profile?.skills?.split(",")[1]?.trim() || "");
+    const [skill3, setSkill3] = useState(profile?.skills?.split(",")[2]?.trim() || "");
+    const [about, setAbout] = useState(profile?.about || '');
+
 
     // Check if the profile belongs to the logged-in user
     const isOwnProfile = user && user.id === profile?.id;
@@ -73,6 +77,10 @@ export default function Profile() {
             setProfession(profile.profession || "");
             setLocation(profile.location || "");
             setGithubUrl(profile.github_url || "");
+            setSkill1(profile.skills?.split(",")[0]?.trim() || "");
+            setSkill2(profile.skills?.split(",")[1]?.trim() || "");
+            setSkill3(profile.skills?.split(",")[2]?.trim() || "");
+            setAbout(profile.about || "");
         }
     }, [profile]);
 
@@ -100,6 +108,32 @@ export default function Profile() {
         }
     };
 
+    // Function to handle the saving of skills and about section
+    const handleSaveSkillsAbout = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!profile) return;
+
+        const skills = [skill1, skill2, skill3].filter(Boolean).join(", ");
+
+        const updates = {
+            skills,
+            about,
+        };
+
+        const { error } = await supabase
+            .from("users")
+            .update(updates)
+            .eq("id", profile.id);
+
+        if (error) {
+            console.error("Failed to update skills/about:", error.message);
+        } else {
+            setProfile({ ...profile, ...updates });
+            setShowEditSkillsAboutModal(false);
+        }
+    };
+
+
 
     // Function to handle the saving of skills and about section
     if (!profile) {
@@ -117,9 +151,9 @@ export default function Profile() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="max-w-5xl h-[800px] mx-auto mt-6 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 flex flex-col"
+                className="w-[80%] h-[800px] mx-auto mt-6 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 flex flex-col"
             >
-                <div className="max-w-5xl h-[800px] mx-auto mt-6 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 flex flex-col">
+                <div className="w-[100%] h-[800px] mx-auto mt-6 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 flex flex-col">
                     {/* Cover Image Section - 1/3 */}
                     <div className="relative flex-[1.5] bg-gray-300 dark:bg-gray-700">
                         {profile.cover_image_url && (
@@ -358,7 +392,7 @@ export default function Profile() {
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
-                            // TODO: handle save
+                            handleSaveSkillsAbout(e);
                             setShowEditSkillsAboutModal(false);
                         }}
                         className="flex flex-col gap-6 flex-grow"
@@ -369,25 +403,22 @@ export default function Profile() {
                             <div className="flex gap-4">
                                 <input
                                     type="text"
-                                    defaultValue={
-                                        profile.skills ? profile.skills.split(",")[0]?.trim() || "" : ""
-                                    }
+                                    value={skill1}
+                                    onChange={(e) => setSkill1(e.target.value)}
                                     placeholder="Skill 1"
                                     className="flex-1 p-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-lg"
                                 />
                                 <input
                                     type="text"
-                                    defaultValue={
-                                        profile.skills ? profile.skills.split(",")[1]?.trim() || "" : ""
-                                    }
+                                    value={skill2}
+                                    onChange={(e) => setSkill2(e.target.value)}
                                     placeholder="Skill 2"
                                     className="flex-1 p-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-lg"
                                 />
                                 <input
                                     type="text"
-                                    defaultValue={
-                                        profile.skills ? profile.skills.split(",")[2]?.trim() || "" : ""
-                                    }
+                                    value={skill3}
+                                    onChange={(e) => setSkill3(e.target.value)}
                                     placeholder="Skill 3"
                                     className="flex-1 p-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-lg"
                                 />
@@ -398,7 +429,10 @@ export default function Profile() {
                         <label className="flex flex-col text-gray-700 dark:text-gray-300 text-lg">
                             About
                             <textarea
-                                defaultValue={profile.about || ""}
+                                value={about}
+                                onChange={(e) => setAbout(e.target.value)}
+                                placeholder="Tell us about yourself..."
+                                maxLength={500}
                                 rows={8}
                                 className="mt-2 p-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none text-lg"
                             />
