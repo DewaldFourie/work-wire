@@ -2,8 +2,11 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/auth-context";
 import { supabase } from "../supabase/client";
-import { Pencil } from "lucide-react";
-import { FaGithub } from "react-icons/fa"; // Font Awesome GitHub icon
+import { Pencil, Camera } from "lucide-react";
+import { FaGithub } from "react-icons/fa";
+import { motion } from "framer-motion";
+import Modal from "../components/Modal";
+
 
 import clsx from "clsx";
 
@@ -20,10 +23,21 @@ type UserProfile = {
     about: string | null;
 };
 
+type ModalProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    children: React.ReactNode;
+};
+
 export default function Profile() {
     const { user } = useAuth();
     const { id } = useParams(); // optional user id for viewing someone else’s profile
     const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [showProfileImageModal, setShowProfileImageModal] = useState(false);
+    const [showCoverImageModal, setShowCoverImageModal] = useState(false);
+    const [showEditDetailsModal, setShowEditDetailsModal] = useState(false);
+    const [showEditSkillsAboutModal, setShowEditSkillsAboutModal] = useState(false);
+
 
     const isOwnProfile = user && user.id === profile?.id;
 
@@ -48,127 +62,324 @@ export default function Profile() {
         loadProfile();
     }, [id, user?.id]);
 
-    if (!profile) return <div className="text-center mt-20">Loading profile...</div>;
+    if (!profile) {
+        return (
+            <div className="h-screen flex items-center justify-center flex-col gap-4 text-gray-700 dark:text-gray-300">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500" />
+                <p className="text-lg font-medium">Loading profile...</p>
+            </div>
+        );
+    }
 
     return (
-        <div className="max-w-5xl h-[800px] mx-auto mt-6 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 flex flex-col">
-            {/* Cover Image Section - 1/3 */}
-            <div className="relative flex-[1.5] bg-gray-300 dark:bg-gray-700">
-                {profile.cover_image_url && (
-                    <img
-                        src={profile.cover_image_url}
-                        alt="Cover"
-                        className="object-cover w-full h-full"
-                    />
-                )}
-                {isOwnProfile && (
-                    <button className="absolute bottom-2 right-4 bg-black bg-opacity-50 p-1 text-white hover:bg-opacity-75 text-sm">
-                        Edit Cover Image
-                    </button>
-                )}
-                {/* Profile Picture */}
-                <div className="absolute bottom-[-60px] left-10 h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-white p-1 shadow-md">
-                    <img
-                        src={profile.profile_image_url || "/default-avatar.png"}
-                        alt="Profile"
-                        className="h-full w-full rounded-full object-cover"
-                    />
-                    {isOwnProfile && (
-                        <div
-                            className="absolute right-2 top-[90px] sm:top-[120px] flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200"
-                            onClick={() => {/* trigger file picker */ }}
-                        >
-                            <Pencil className="text-2xl" />
-                        </div>
-                    )}
-                </div>
-            </div>
-            {/* Bio Section - 2/3 */}
-            <div className="flex-[2.5] p-10 overflow-y-auto">
-                <div className="flex items-start gap-2">
-                    {/* Profile image spacer */}
-                    <div className="w-60 shrink-0" />
-                    {/* User details */}
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-4xl mr-3 font-bold text-gray-900 dark:text-white">{profile.username}</h2>
-                            {profile.github_url && (
-                                <a
-                                    href={profile.github_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
-                                    title="GitHub Profile"
+        <>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="max-w-5xl h-[800px] mx-auto mt-6 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 flex flex-col"
+            >
+                <div className="max-w-5xl h-[800px] mx-auto mt-6 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 flex flex-col">
+                    {/* Cover Image Section - 1/3 */}
+                    <div className="relative flex-[1.5] bg-gray-300 dark:bg-gray-700">
+                        {profile.cover_image_url && (
+                            <img
+                                src={profile.cover_image_url}
+                                alt="Cover"
+                                className="object-cover w-full h-full"
+                            />
+                        )}
+                        {isOwnProfile && (
+                            <button
+                                className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                onClick={() => setShowCoverImageModal(true)}
+                            >
+                                <Camera size={18} />
+                                Edit Cover
+                            </button>
+                        )}
+                        {/* Profile Picture */}
+                        <div className="absolute bottom-[-75px] left-10 h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-white p-1 shadow-md">
+                            <img
+                                src={profile.profile_image_url || "/default-image.jpg"}
+                                alt="Profile"
+                                className="h-full w-full rounded-full object-cover scale-110"
+                            />
+                            {isOwnProfile && (
+                                <button
+                                    className="absolute right-2 top-[90px] sm:top-[120px] flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                    onClick={() => setShowProfileImageModal(true)}
+                                    aria-label="Edit profile picture"
                                 >
-                                    <FaGithub className="w-6 h-6 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white" />
-                                </a>
+                                    <Camera size={18} className="text-gray-800 dark:text-gray-200" />
+                                </button>
+
                             )}
                         </div>
-                        <p className="text-sm mt-2 text-gray-500 dark:text-gray-400">
-                            Profession:{" "}
-                            <span className="text-base ml-4 text-gray-700 dark:text-gray-300">
-                                {profile.profession || "No profession listed"}
-                            </span>
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Location:{" "}
-                            <span className="text-base ml-4 text-gray-700 dark:text-gray-300">
-                                {profile.location || "No location provided"}
-                            </span>
-                        </p>
                     </div>
-                    {/* Edit button */}
-                    {isOwnProfile && (
-                        <button className="bg-gray-100 dark:bg-gray-700 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
-                            <Pencil size={18} />
-                        </button>
-                    )}
-                </div>
-                <hr className="my-6 border-gray-200 dark:border-gray-700" />
-                <div className="mt-6 relative ">
-                    {/* Edit Button */}
-                    {isOwnProfile && (
-                        <button
-                            className="absolute top-0 right-0 bg-gray-100 dark:bg-gray-700 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
-                            onClick={() => {
-                                // Edit both Skills and About logic here
-                            }}
-                            aria-label="Edit Profile Details"
-                        >
-                            <Pencil size={18} />
-                        </button>
-                    )}
-
-                    {/* Skills Section */}
-                    {profile.skills && profile.skills.trim().length > 0 && (
-                        <div className="mb-6">
-                            <h4 className="font-semibold text-xl text-gray-800 dark:text-white">Skills</h4>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {profile.skills.split(",").map((skill, i) => (
-                                    <span
-                                        key={i}
-                                        className="bg-gray-200 dark:bg-gray-700 text-sm px-2 py-1 rounded"
-                                    >
-                                        {skill.trim()}
+                    {/* Bio Section - 2/3 */}
+                    <div className="flex-[2.5] p-10 overflow-y-auto">
+                        <div className="flex items-start gap-2">
+                            {/* Profile image spacer */}
+                            <div className="w-60 shrink-0" />
+                            {/* User details */}
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-4xl mr-3 font-bold text-gray-900 dark:text-white">{profile.username}</h2>
+                                    {profile.github_url && (
+                                        <a
+                                            href={profile.github_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+                                            title="GitHub Profile"
+                                        >
+                                            <FaGithub className="w-6 h-6 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white" />
+                                        </a>
+                                    )}
+                                </div>
+                                <p className="text-sm mt-2 text-gray-500 dark:text-gray-400">
+                                    Profession:{" "}
+                                    <span className="text-base ml-4 text-gray-700 dark:text-gray-300">
+                                        {profile.profession || "No profession listed"}
                                     </span>
-                                ))}
+                                </p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Location:{" "}
+                                    <span className="text-base ml-4 text-gray-700 dark:text-gray-300">
+                                        {profile.location || "No location provided"}
+                                    </span>
+                                </p>
+                            </div>
+                            {/* Edit button */}
+                            {isOwnProfile && (
+                                <button
+                                    className="bg-gray-100 dark:bg-gray-700 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
+                                    onClick={() => setShowEditDetailsModal(true)}
+                                >
+                                    <Pencil size={18} />
+                                </button>
+                            )}
+                        </div>
+                        <hr className="my-6 border-gray-200 dark:border-gray-700" />
+                        <div className="mt-6 relative ">
+                            {/* Edit Button */}
+                            {isOwnProfile && (
+                                <button
+                                    className="absolute top-0 right-0 bg-gray-100 dark:bg-gray-700 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
+                                    onClick={() => setShowEditSkillsAboutModal(true)}
+                                    aria-label="Edit Profile Details"
+                                >
+                                    <Pencil size={18} />
+                                </button>
+                            )}
+
+                            {/* Skills Section */}
+                            {profile.skills && profile.skills.trim().length > 0 && (
+                                <div className="mb-6">
+                                    <h4 className="font-semibold text-xl text-gray-800 dark:text-white">Skills</h4>
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {profile.skills.split(",").map((skill, i) => (
+                                            <span
+                                                key={i}
+                                                className="bg-gray-200 dark:bg-gray-700 text-sm px-2 py-1 rounded"
+                                            >
+                                                {skill.trim()}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* About Me Section */}
+                            <div>
+                                <h4 className="font-semibold text-3xl text-gray-800 dark:text-white mb-2">
+                                    About Me
+                                </h4>
+                                <p className="text-gray-700 dark:text-gray-300">
+                                    {profile.about || "No bio provided"}
+                                </p>
                             </div>
                         </div>
-                    )}
 
-                    {/* About Me Section */}
-                    <div>
-                        <h4 className="font-semibold text-3xl text-gray-800 dark:text-white mb-2">
-                            About Me
-                        </h4>
-                        <p className="text-gray-700 dark:text-gray-300">
-                            {profile.about || "No bio provided"}
-                        </p>
                     </div>
                 </div>
+            </motion.div>
+            {/* Profile Picture edit Modal */}
+            <Modal isOpen={showProfileImageModal} onClose={() => setShowProfileImageModal(false)} maxWidthClass="max-w-md">
+                <div className="max-w-md w-full h-96 bg-white dark:bg-gray-800 p-6 rounded-xl mx-auto flex flex-col">
+                    <h2 className="text-lg font-semibold mb-4 text-center">
+                        Change Profile Picture
+                    </h2>
+                    <div className="flex-grow flex items-center justify-center">
+                        <input type="file" accept="image/*" className="block" />
+                    </div>
+                    <div className="mt-6 flex justify-end">
+                        <button
+                            onClick={() => setShowProfileImageModal(false)}
+                            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+            {/* Cover Image edit Modal */}
+            <Modal isOpen={showCoverImageModal} onClose={() => setShowCoverImageModal(false)} maxWidthClass="max-w-md">
+                <div className="max-w-md w-full h-96 bg-white dark:bg-gray-800 p-6 rounded-xl mx-auto flex flex-col">
+                    <h2 className="text-lg font-semibold mb-4 text-center">
+                        Change Cover Image
+                    </h2>
+                    <div className="flex-grow flex items-center justify-center">
+                        <input type="file" accept="image/*" className="block" />
+                    </div>
+                    <div className="mt-6 flex justify-end">
+                        <button
+                            onClick={() => setShowCoverImageModal(false)}
+                            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+            {/* Edit Details Modal */}
+            <Modal isOpen={showEditDetailsModal} onClose={() => setShowEditDetailsModal(false)} maxWidthClass="max-w-md">
+                <div className="max-w-md w-full h-[420px] bg-white dark:bg-gray-800 p-6 rounded-xl mx-auto flex flex-col">
+                    <h2 className="text-lg font-semibold mb-6 text-center">
+                        Edit Profile Details
+                    </h2>
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            // TODO: handle save
+                            setShowEditDetailsModal(false);
+                        }}
+                        className="flex flex-col gap-4 flex-grow"
+                    >
+                        <label className="flex flex-col text-gray-700 dark:text-gray-300">
+                            Profession
+                            <input
+                                type="text"
+                                defaultValue={profile.profession || ""}
+                                className="mt-1 p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            />
+                        </label>
 
-            </div>
-        </div>
+                        <label className="flex flex-col text-gray-700 dark:text-gray-300">
+                            Location
+                            <input
+                                type="text"
+                                defaultValue={profile.location || ""}
+                                className="mt-1 p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            />
+                        </label>
+
+                        <label className="flex flex-col text-gray-700 dark:text-gray-300">
+                            GitHub URL
+                            <input
+                                type="url"
+                                defaultValue={profile.github_url || ""}
+                                placeholder="https://github.com/yourusername"
+                                className="mt-1 p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            />
+                        </label>
+
+                        <div className="flex justify-end gap-3 mt-auto">
+                            <button
+                                type="button"
+                                onClick={() => setShowEditDetailsModal(false)}
+                                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </Modal>
+
+            {/* Edit Skills and About Modal */}
+            <Modal isOpen={showEditSkillsAboutModal} onClose={() => setShowEditSkillsAboutModal(false)} maxWidthClass="max-w-4xl">
+                <div className="max-w-3xl w-full h-[700px] bg-white dark:bg-gray-800 p-8 rounded-xl mx-auto flex flex-col">
+                    <h2 className="text-xl font-semibold mb-8 text-center">
+                        Edit Skills & About
+                    </h2>
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            // TODO: handle save
+                            setShowEditSkillsAboutModal(false);
+                        }}
+                        className="flex flex-col gap-6 flex-grow"
+                    >
+                        {/* Skills inputs */}
+                        <div className="flex flex-col text-gray-700 dark:text-gray-300">
+                            <label className="mb-3 font-medium text-lg">Skills (3 inputs)</label>
+                            <div className="flex gap-4">
+                                <input
+                                    type="text"
+                                    defaultValue={
+                                        profile.skills ? profile.skills.split(",")[0]?.trim() || "" : ""
+                                    }
+                                    placeholder="Skill 1"
+                                    className="flex-1 p-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-lg"
+                                />
+                                <input
+                                    type="text"
+                                    defaultValue={
+                                        profile.skills ? profile.skills.split(",")[1]?.trim() || "" : ""
+                                    }
+                                    placeholder="Skill 2"
+                                    className="flex-1 p-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-lg"
+                                />
+                                <input
+                                    type="text"
+                                    defaultValue={
+                                        profile.skills ? profile.skills.split(",")[2]?.trim() || "" : ""
+                                    }
+                                    placeholder="Skill 3"
+                                    className="flex-1 p-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-lg"
+                                />
+                            </div>
+                        </div>
+
+                        {/* About textarea */}
+                        <label className="flex flex-col text-gray-700 dark:text-gray-300 text-lg">
+                            About
+                            <textarea
+                                defaultValue={profile.about || ""}
+                                rows={8}
+                                className="mt-2 p-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none text-lg"
+                            />
+                        </label>
+
+                        <div className="flex justify-end gap-4 mt-auto">
+                            <button
+                                type="button"
+                                onClick={() => setShowEditSkillsAboutModal(false)}
+                                className="px-6 py-3 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-lg"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 text-m"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </Modal>
+        </>
     );
 
+
 }
+
