@@ -40,11 +40,12 @@ export default function Profile() {
     const [profession, setProfession] = useState(profile?.profession || "");
     const [location, setLocation] = useState(profile?.location || "");
     const [githubUrl, setGithubUrl] = useState(profile?.github_url || "");
+    
 
-
-
+    // Check if the profile belongs to the logged-in user
     const isOwnProfile = user && user.id === profile?.id;
 
+    // Fetch the profile data when the component mounts or when the user id changes
     useEffect(() => {
         const loadProfile = async () => {
             const profileId = id || user?.id;
@@ -66,6 +67,41 @@ export default function Profile() {
         loadProfile();
     }, [id, user?.id]);
 
+    // Update the state when the profile changes
+    useEffect(() => {
+        if (profile) {
+            setProfession(profile.profession || "");
+            setLocation(profile.location || "");
+            setGithubUrl(profile.github_url || "");
+        }
+    }, [profile]);
+
+    // Function to handle the saving of profile details
+    const handleSaveDetails = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!profile) return;
+
+        const updates = {
+            profession,
+            location,
+            github_url: githubUrl,
+        };
+
+        const { error } = await supabase
+            .from("users")
+            .update(updates)
+            .eq("id", profile.id);
+
+        if (error) {
+            console.error("Failed to update profile details:", error.message);
+        } else {
+            setProfile({ ...profile, ...updates });
+            setShowEditDetailsModal(false);
+        }
+    };
+
+
+    // Function to handle the saving of skills and about section
     if (!profile) {
         return (
             <div className="h-screen flex items-center justify-center flex-col gap-4 text-gray-700 dark:text-gray-300">
@@ -256,7 +292,7 @@ export default function Profile() {
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
-                            // TODO: handle save
+                            handleSaveDetails(e);
                             setShowEditDetailsModal(false);
                         }}
                         className="flex flex-col gap-4 flex-grow"
@@ -265,7 +301,9 @@ export default function Profile() {
                             Profession
                             <input
                                 type="text"
-                                defaultValue={profile.profession || ""}
+                                value={profession}
+                                onChange={(e) => setProfession(e.target.value)}
+                                placeholder="e.g. Software Engineer"
                                 className="mt-1 p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                             />
                         </label>
@@ -274,7 +312,9 @@ export default function Profile() {
                             Location
                             <input
                                 type="text"
-                                defaultValue={profile.location || ""}
+                                value={location}
+                                onChange={(e) => setLocation(e.target.value)}
+                                placeholder="e.g. San Francisco, CA"
                                 className="mt-1 p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                             />
                         </label>
@@ -283,7 +323,8 @@ export default function Profile() {
                             GitHub URL
                             <input
                                 type="url"
-                                defaultValue={profile.github_url || ""}
+                                value={githubUrl}
+                                onChange={(e) => setGithubUrl(e.target.value)}
                                 placeholder="https://github.com/yourusername"
                                 className="mt-1 p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                             />
