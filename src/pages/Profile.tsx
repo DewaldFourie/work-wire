@@ -37,6 +37,10 @@ export default function Profile() {
     const [showCoverImageModal, setShowCoverImageModal] = useState(false);
     const [showEditDetailsModal, setShowEditDetailsModal] = useState(false);
     const [showEditSkillsAboutModal, setShowEditSkillsAboutModal] = useState(false);
+    const [profession, setProfession] = useState(profile?.profession || "");
+    const [location, setLocation] = useState(profile?.location || "");
+    const [githubUrl, setGithubUrl] = useState(profile?.github_url || "");
+
 
 
     const isOwnProfile = user && user.id === profile?.id;
