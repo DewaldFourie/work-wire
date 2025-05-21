@@ -142,9 +142,9 @@ export default function Profile() {
 
         // 1. Delete old image if it exists
         if (profile.profile_image_url) {
-            const urlPrefix = "https://ijlrhyjgwxqixznoiuhe.supabase.co/storage/v1/object/public/profile-images/profile/";
+            const urlPrefix = "https://ijlrhyjgwxqixznoiuhe.supabase.co/storage/v1/object/public/profile-images/profile/avatar/";
             const fileName = profile.profile_image_url.replace(urlPrefix, '');
-            const filePath = `profile/${fileName}`; // Include the folder here for the remove() call
+            const filePath = `profile/avatar/${fileName}`; // Include the folder here for the remove() call
 
             const { error: deleteError } = await supabase.storage
                 .from('profile-images')
@@ -159,7 +159,7 @@ export default function Profile() {
         // 2. Upload new image
         const fileExt = selectedProfileImage.name.split('.').pop();
         const fileName = `${profile.id}-${Date.now()}.${fileExt}`;
-        const filePath = `profile/${fileName}`;
+        const filePath = `profile/avatar/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
             .from('profile-images')
