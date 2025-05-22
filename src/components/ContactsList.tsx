@@ -62,7 +62,7 @@ const ContactsList = ({ currentUserId, onSelectContact }: Props) => {
                                 className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition
                                 ${isActive
                                         ? "bg-blue-100 dark:bg-blue-900 border-l-2 border-blue-500"
-                                        : "bg-gray-100 dark:bg-gray-900"
+                                        : "bg-gray-200 dark:bg-gray-900"
                                     }`}
                             >
                                 <img
