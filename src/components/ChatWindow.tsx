@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { UserProfile } from "../types";
 import { supabase } from "../supabase/client";
 import type { Message } from "../types";
-import { CheckCheck, PackageOpen } from "lucide-react";
+import { CheckCheck, PackageOpen, ChevronDown, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 
@@ -15,6 +15,9 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(true);
+    const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+    const [dropdownVisibleId, setDropdownVisibleId] = useState<string | null>(null);
+
 
 
     // Fetch messages when the component mounts or when the contact changes
@@ -100,6 +103,25 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
         }
     };
 
+    // function to handle soft delete of a message
+    // This function will be called when the user clicks the "Delete" button
+    const handleDeleteMessage = async (messageId: string) => {
+
+        const { error } = await supabase
+            .from("messages")
+            .update({ deleted: true })
+            .eq("id", messageId);
+
+        if (error) {
+            console.error("Error deleting message:", error.message);
+        } else {
+            setMessages((prev) =>
+                prev.filter((msg) => msg.id !== messageId)
+            );
+        }
+    };
+
+
 
     return (
         <motion.div
@@ -166,10 +188,12 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
                         return (
                             <motion.div
                                 key={msg.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className={`flex flex-col ${isSentByCurrentUser ? "items-end" : "items-start"}`}
+                                onMouseEnter={() => setHoveredMessageId(msg.id)}
+                                onMouseLeave={() => {
+                                    setHoveredMessageId(null);
+                                    setDropdownVisibleId(null);
+                                }}
+                                className={`relative flex flex-col ${isSentByCurrentUser ? "items-end" : "items-start"}`}
                             >
                                 <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                                     {formattedDate} at {formattedTime}
@@ -181,9 +205,37 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
                                         }`}
                                 >
                                     {msg.content}
+
                                     {isSentByCurrentUser && (
-                                        <div className="absolute bottom-1 right-2">
-                                            <CheckCheck className="w-4 h-4 text-white opacity-70" />
+                                        <div
+                                            className="absolute bottom-1 right-2 cursor-pointer"
+                                            onClick={() =>
+                                                setDropdownVisibleId(dropdownVisibleId === msg.id ? null : msg.id)
+                                            }
+                                        >
+                                            {hoveredMessageId === msg.id ? (
+                                                <ChevronDown className="w-4 h-4 text-white opacity-70" />
+                                            ) : (
+                                                <CheckCheck className="w-4 h-4 text-white opacity-70" />
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Mini Dropdown */}
+                                    {dropdownVisibleId === msg.id && (
+                                        <div className="absolute z-10 top-full right-0 mb-2 bg-white dark:bg-gray-800 border rounded shadow p-2 text-sm"
+                                            onMouseEnter={() => setHoveredMessageId(msg.id)}
+                                            onMouseLeave={() => {
+                                                setDropdownVisibleId(null);
+                                                setHoveredMessageId(null);
+                                            }}
+                                        >
+                                            <button
+                                                onClick={() => handleDeleteMessage(msg.id)}
+                                                className="text-red-600 hover:underline"
+                                            >
+                                                <Trash2 className="w-4 h-4 inline" />     
+                                            </button>
                                         </div>
                                     )}
                                 </div>
