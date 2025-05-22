@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import type { UserProfile } from "../types";
 import { supabase } from "../supabase/client";
 import type { Message } from "../types";
-import { CheckCheck, PackageOpen, ChevronDown, Trash2 } from "lucide-react";
+import { CheckCheck, PackageOpen, ChevronDown, Trash2, SendHorizontal } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRef } from "react";
+
 
 
 type Props = {
@@ -17,6 +19,7 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
     const [loading, setLoading] = useState(true);
     const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
     const [dropdownVisibleId, setDropdownVisibleId] = useState<string | null>(null);
+    const bottomRef = useRef<HTMLDivElement | null>(null);
 
 
 
@@ -50,7 +53,6 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
     }, [contact.id, currentUser.id]);
 
 
-
     // Realtime subscription to new messages between the current user and selected contact
     // This effect will run whenever the contact changes
     useEffect(() => {
@@ -82,6 +84,13 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
         };
     }, [currentUser.id, contact.id]);
 
+
+    // Scroll to the bottom of the chat window when new messages are added
+    useEffect(() => {
+        if (bottomRef.current) {
+            bottomRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages]);
 
 
 
@@ -138,10 +147,10 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
             </div>
 
             {/* Chat History */}
-            <div className="flex-1 bg-gray-200 dark:bg-gray-900 rounded p-4 overflow-y-auto space-y-4">
+            <div className="flex-1 bg-gray-200 dark:bg-gray-900 rounded p-4 overflow-y-auto overflow-x-hidden space-y-4 pb-[200px]">
                 {loading ? (
                     <motion.div
-                        className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400"
+                        className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 "
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -195,17 +204,16 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
                                 }}
                                 className={`relative flex flex-col ${isSentByCurrentUser ? "items-end" : "items-start"}`}
                             >
-                                <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 ml-2 mr-2">
                                     {formattedDate} at {formattedTime}
                                 </span>
                                 <div
-                                    className={`relative max-w-[70%] min-w-[200px] p-3 rounded-lg shadow ${isSentByCurrentUser
+                                    className={`relative max-w-[70%] min-w-[200px] p-3 rounded-lg shadow break-words break-all whitespace-pre-wrap ${isSentByCurrentUser
                                         ? "bg-blue-600 text-white self-end rounded-br-none"
                                         : "bg-white dark:bg-gray-700 text-gray-900 dark:text-white self-start rounded-bl-none"
                                         }`}
                                 >
                                     {msg.content}
-
                                     {isSentByCurrentUser && (
                                         <div
                                             className="absolute bottom-1 right-2 cursor-pointer"
@@ -223,7 +231,7 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
 
                                     {/* Mini Dropdown */}
                                     {dropdownVisibleId === msg.id && (
-                                        <div className="absolute z-10 top-full right-0 mb-2 bg-white dark:bg-gray-800 border rounded shadow p-2 text-sm"
+                                        <div className="absolute z-10 top-full right-0 mb-2 bg-white dark:bg-gray-700 border dark:border-gray-700 rounded shadow py-1 px-2 text-sm"
                                             onMouseEnter={() => setHoveredMessageId(msg.id)}
                                             onMouseLeave={() => {
                                                 setDropdownVisibleId(null);
@@ -234,7 +242,7 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
                                                 onClick={() => handleDeleteMessage(msg.id)}
                                                 className="text-red-600 hover:underline"
                                             >
-                                                <Trash2 className="w-4 h-4 inline" />     
+                                                <Trash2 className="w-4 h-4 inline" />
                                             </button>
                                         </div>
                                     )}
@@ -243,25 +251,26 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
                         );
                     })
                 )}
+                {messages.length > 0 && <div ref={bottomRef} />}
             </div>
-
-
             {/* Input Area */}
-            <div className="mt-4 flex gap-2">
-                <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="flex-1 p-2 rounded border dark:bg-gray-900 dark:text-white"
-                    placeholder="Type a message..."
-                />
-                <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400"
-                    onClick={handleSendMessage}
-                    disabled={!message.trim()}
-                >
-                    Send
-                </button>
+            <div className="mt-4 flex gap-2 items-center">
+                <div className="relative flex-1">
+                    <input
+                        type="text"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className="w-full p-3 pr-20 rounded border dark:bg-gray-900 dark:text-white text-lg"
+                        placeholder="Type a message..."
+                    />
+                    <button
+                        onClick={handleSendMessage}
+                        disabled={!message.trim()}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800 disabled:text-blue-300"
+                    >
+                        <SendHorizontal size={24} className="mr-2" />
+                    </button>
+                </div>
             </div>
         </motion.div>
     );
