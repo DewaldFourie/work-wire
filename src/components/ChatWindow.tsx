@@ -21,7 +21,7 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
     };
 
     return (
-        <div className="h-full p-6 flex flex-col">
+        <div className="h-full p-4 flex flex-col">
             {/* Header */}
             <div className="border-b pb-2 mb-4">
                 <h2 className="text-xl font-semibold">
