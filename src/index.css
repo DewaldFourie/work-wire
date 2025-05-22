@@ -9,3 +9,21 @@
 .btn {
     @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded;
 }
+
+/* Modern thin scrollbar styling */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(100, 100, 100, 0.4);
+    border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+}

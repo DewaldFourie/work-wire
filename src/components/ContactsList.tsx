@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase/client";
 import type { UserProfile } from "../types";
+import { Users } from "lucide-react";
+
 
 type Props = {
     currentUserId: string;
@@ -42,12 +44,15 @@ const ContactsList = ({ currentUserId, onSelectContact }: Props) => {
 
     return (
         <div className="p-4 space-y-2">
-            <h2 className="text-xl font-semibold">Contacts</h2>
+            <h2 className="text-xl font-semibold flex items-center gap-4">
+                <Users className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+                Contacts
+            </h2>
             <hr className="border-t border-gray-300 dark:border-gray-700 mb-4" />
             {contacts.length === 0 ? (
                 <div className="text-gray-500 dark:text-gray-400">No other users found.</div>
             ) : (
-                <ul className="space-y-2">
+                <ul className="space-y-2 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
                     {contacts.map((contact) => {
                         const isActive = contact.id === activeContactId;
                         return (
@@ -56,7 +61,7 @@ const ContactsList = ({ currentUserId, onSelectContact }: Props) => {
                                 onClick={() => handleSelect(contact)}
                                 className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition
                                 ${isActive
-                                        ? "bg-blue-100 dark:bg-blue-900"
+                                        ? "bg-blue-100 dark:bg-blue-900 border-l-2 border-blue-500"
                                         : "bg-gray-100 dark:bg-gray-900"
                                     }`}
                             >
