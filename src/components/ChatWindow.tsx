@@ -1,17 +1,21 @@
+
 import { useState, useEffect } from "react";
 import type { UserProfile } from "../types";
 import { supabase } from "../supabase/client";
 import type { Message } from "../types";
-import { CheckCheck, PackageOpen, ChevronDown, Trash2, SendHorizontal } from "lucide-react";
+import { CheckCheck, PackageOpen, ChevronDown, Trash2, SendHorizontal, SmilePlus } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRef } from "react";
-
+import EmojiPicker from 'emoji-picker-react';
+import type { EmojiClickData, Theme } from 'emoji-picker-react';
 
 
 type Props = {
     contact: UserProfile;
     currentUser: UserProfile;
 };
+
+
 
 const ChatWindow = ({ contact, currentUser }: Props) => {
     const [message, setMessage] = useState("");
@@ -20,14 +24,14 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
     const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
     const [dropdownVisibleId, setDropdownVisibleId] = useState<string | null>(null);
     const bottomRef = useRef<HTMLDivElement | null>(null);
-
-
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     // Fetch messages when the component mounts or when the contact changes
     // This effect will run whenever the contact changes
     useEffect(() => {
         const fetchMessages = async () => {
             setLoading(true); // Show loading state
+            setShowEmojiPicker(false); // Hide emoji picker if open
             const { data, error } = await supabase
                 .from("messages")
                 .select("*")
@@ -92,6 +96,15 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
         }
     }, [messages]);
 
+    // Close emoji picker when clicking outside of it
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setShowEmojiPicker(false);
+        };
+        document.addEventListener("keydown", handler);
+        return () => document.removeEventListener("keydown", handler);
+    }, []);
+
 
 
     // Function to handle sending a message
@@ -130,6 +143,12 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
         }
     };
 
+    // Function to handle emoji picker toggle
+    // This function will be called when the user clicks the emoji button
+    const handleEmojiSelect = (emojiData: EmojiClickData) => {
+        setMessage(prev => prev + emojiData.emoji);
+        setShowEmojiPicker(false);
+    };
 
 
     return (
@@ -208,9 +227,9 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
                                     {formattedDate} at {formattedTime}
                                 </span>
                                 <div
-                                    className={`relative max-w-[70%] min-w-[200px] p-3 rounded-lg shadow break-words break-all whitespace-pre-wrap ${isSentByCurrentUser
-                                        ? "bg-blue-600 text-white self-end rounded-br-none"
-                                        : "bg-white dark:bg-gray-700 text-gray-900 dark:text-white self-start rounded-bl-none"
+                                    className={`relative max-w-[70%] min-w-[200px] p-3 rounded-2xl backdrop-blur-sm bg-opacity-90 break-words break-all whitespace-pre-wrap transition-shadow duration-300 ${isSentByCurrentUser
+                                            ? "bg-blue-600 text-white self-end rounded-br-none shadow-[0_6px_12px_rgba(0,0,0,0.25)] dark:shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
+                                            : "bg-white text-gray-900 self-start rounded-bl-none shadow-[0_6px_12px_rgba(0,0,0,0.1)] dark:bg-gray-800 dark:text-white dark:shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
                                         }`}
                                 >
                                     {msg.content}
@@ -254,24 +273,44 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
                 {messages.length > 0 && <div ref={bottomRef} />}
             </div>
             {/* Input Area */}
-            <div className="mt-4 flex gap-2 items-center">
+            <div className="mt-4 flex gap-2 items-center relative">
+                {/* Emoji Picker */}
+                {showEmojiPicker && (
+                    <div className="absolute bottom-full mb-4 left-0 z-50">
+                        <EmojiPicker
+                            onEmojiClick={handleEmojiSelect}
+                            theme={document.documentElement.classList.contains("dark") ? "dark" as Theme : "light" as Theme}
+
+                        />
+                    </div>
+                )}
+
+                {/* Input + Send */}
                 <div className="relative flex-1">
+                    {/* Emoji Button */}
+                    <button
+                        onClick={() => setShowEmojiPicker(prev => !prev)}
+                        className="absolute text-2xl top-1/2 -translate-y-1/2 left-3  hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+                    >
+                        <SmilePlus />
+                    </button>
                     <input
                         type="text"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        className="w-full p-3 pr-20 rounded border dark:bg-gray-900 dark:text-white text-lg"
+                        className="w-full py-3 pr-20 pl-14 rounded ring-1 ring-blue-500 focus:ring-2 focus:outline-none focus:ring-blue-500 dark:ring-blue-800 dark:focus:ring-blue-800 dark:bg-gray-900 dark:text-white text-lg "
                         placeholder="Type a message..."
                     />
                     <button
                         onClick={handleSendMessage}
                         disabled={!message.trim()}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800 disabled:text-blue-300"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800 disabled:text-blue-300 hover:cursor-pointer"
                     >
                         <SendHorizontal size={24} className="mr-2" />
                     </button>
                 </div>
             </div>
+
         </motion.div>
     );
 };
