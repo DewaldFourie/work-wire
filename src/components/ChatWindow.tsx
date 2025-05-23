@@ -201,7 +201,7 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
             </motion.div>
             <hr className="border-gray-300 dark:border-gray-600 mb-3"/>
             {/* Chat History */}
-            <div className="flex-1 bg-gray-200 dark:bg-gray-900 rounded p-4 overflow-y-auto overflow-x-hidden space-y-4 pb-[200px]">
+            <div className="flex-1 bg-gray-200 dark:bg-gray-900 rounded p-4 overflow-y-auto overflow-x-hidden space-y-4 pb-[100px]">
                 {loading ? (
                     <motion.div
                         className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 "
