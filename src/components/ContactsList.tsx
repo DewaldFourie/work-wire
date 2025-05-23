@@ -22,7 +22,7 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
     const [loading, setLoading] = useState(true);
     const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
 
-
+    // Fetch contacts and their last message timestamps
     useEffect(() => {
         const fetchContacts = async () => {
             setLoading(true);
@@ -75,7 +75,8 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
         fetchContacts();
     }, [currentUserId]);
 
-
+    // Subscribe to presence updates
+    // This will track the online status of users
     useEffect(() => {
         const channel = supabase.channel("presence:online-users", {
             config: {
@@ -97,6 +98,60 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
 
         return () => {
             channel.unsubscribe();
+        };
+    }, [currentUserId]);
+
+    // Subscribe to new messages in real-time
+    // This will update the contacts list when a new message is sent or received
+    useEffect(() => {
+        const channel = supabase.channel('messages-realtime')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages'
+            }, (payload) => {
+                const newMsg = payload.new;
+
+                // Only update if currentUser is sender or receiver
+                if (newMsg.sender_id === currentUserId || newMsg.receiver_id === currentUserId) {
+                    setContacts(prevContacts => {
+                        // Identify contact ID (the other user)
+                        const contactId = newMsg.sender_id === currentUserId ? newMsg.receiver_id : newMsg.sender_id;
+
+                        let found = false;
+                        const updated = prevContacts.map(contact => {
+                            if (contact.id === contactId) {
+                                found = true;
+                                return {
+                                    ...contact,
+                                    last_message_time: newMsg.created_at,
+                                    last_message_text: newMsg.content,
+                                    last_message_sender_id: newMsg.sender_id,
+                                };
+                            }
+                            return contact;
+                        });
+
+                        if (!found) {
+                            // Optional: if contact is not in the list (unlikely), ignore or fetch new contacts
+                            return prevContacts;
+                        }
+
+                        // Sort by last_message_time desc
+                        updated.sort((a, b) => {
+                            if (!a.last_message_time) return 1;
+                            if (!b.last_message_time) return -1;
+                            return new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime();
+                        });
+
+                        return [...updated];
+                    });
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
         };
     }, [currentUserId]);
 
