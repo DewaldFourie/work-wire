@@ -40,16 +40,24 @@ const Home = () => {
 	}
 
 	return (
-		<div className="flex h-full">
+		<div className="flex h-full ">
 			{/* Left Sidebar: Contacts List */}
 			<div className="w-1/4 border-r border-gray-200 dark:border-gray-700">
-				<ContactsList currentUserId={user.id} onSelectContact={setSelectedContact} />
+				<ContactsList 
+					currentUserId={user.id} 
+					onSelectContact={setSelectedContact}
+					selectedContactId={selectedContact?.id || null}
+				/>
 			</div>
 
 			{/* Right Container: Chat or Welcome */}
 			<div className="flex-1">
 				{selectedContact ? (
-					<ChatWindow contact={selectedContact} currentUser={currentUserProfile} />
+					<ChatWindow 
+						contact={selectedContact} 
+						currentUser={currentUserProfile} 
+						onClose={() => setSelectedContact(null)}
+					/>
 				) : (
 					<Welcome />
 				)}
