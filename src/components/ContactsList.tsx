@@ -3,6 +3,7 @@ import { supabase } from "../supabase/client";
 import type { UserProfile } from "../types";
 import { Users, CheckCheck } from "lucide-react";
 import { motion } from "framer-motion";
+import { formatMessageDate } from "../utils/date";
 
 type Props = {
     currentUserId: string;
@@ -72,9 +73,12 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
         fetchContacts();
     }, [currentUserId]);
 
+    // Handle contact selection
+    // This function is called when a contact is clicked
     const handleSelect = (contact: UserProfile) => {
         onSelectContact(contact);
     };
+
 
     return (
         <motion.div
@@ -111,8 +115,8 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                                 transition={{ duration: 0.2 }}
                                 onClick={() => handleSelect(contact)}
                                 className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition ${isActive
-                                        ? "bg-blue-100 dark:bg-blue-900 border-l-2 border-blue-500"
-                                        : "bg-gray-200 dark:bg-gray-900"
+                                    ? "bg-blue-100 dark:bg-blue-900 border-l-2 border-blue-500"
+                                    : "bg-gray-200 dark:bg-gray-900"
                                     }`}
                             >
                                 <img
@@ -129,10 +133,7 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                                         </div>
                                         <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
                                             {contact.last_message_time
-                                                ? new Date(contact.last_message_time).toLocaleTimeString([], {
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                })
+                                                ? formatMessageDate(contact.last_message_time)
                                                 : ""}
                                         </div>
                                     </div>

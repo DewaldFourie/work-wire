@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { useRef } from "react";
 import EmojiPicker from 'emoji-picker-react';
 import type { EmojiClickData, Theme } from 'emoji-picker-react';
+import { formatMessageDateTime } from "../utils/date";
 
 
 type Props = {
@@ -162,8 +163,8 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
             {/* Header */}
             <motion.div
                 key={contact.id} // Ensure smooth animation per contact switch
-                initial={{ opacity: 0,  }}
-                animate={{ opacity: 1,  }}
+                initial={{ opacity: 0, }}
+                animate={{ opacity: 1, }}
                 exit={{ opacity: 0, }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="flex items-center justify-between  pb-2 mb-2 px-2 sm:px-0"
@@ -199,7 +200,7 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                     <X size={20} />
                 </button>
             </motion.div>
-            <hr className="border-gray-300 dark:border-gray-600 mb-3"/>
+            <hr className="border-gray-300 dark:border-gray-600 mb-3" />
             {/* Chat History */}
             <div className="flex-1 bg-gray-200 dark:bg-gray-900 rounded p-4 overflow-y-auto overflow-x-hidden space-y-4 pb-[100px]">
                 {loading ? (
@@ -237,16 +238,7 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                 ) : (
                     messages.map((msg) => {
                         const isSentByCurrentUser = msg.sender_id === currentUser.id;
-                        const timestamp = new Date(msg.created_at);
-                        const formattedDate = timestamp.toLocaleDateString(undefined, {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                        });
-                        const formattedTime = timestamp.toLocaleTimeString(undefined, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        });
+                        const formattedDate = formatMessageDateTime(msg.created_at);
 
                         return (
                             <motion.div
@@ -259,7 +251,7 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                                 className={`relative flex flex-col ${isSentByCurrentUser ? "items-end" : "items-start"}`}
                             >
                                 <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 ml-2 mr-2">
-                                    {formattedDate} at {formattedTime}
+                                    {formattedDate} 
                                 </span>
                                 <div
                                     className={`relative max-w-[70%] min-w-[200px] p-3 rounded-2xl backdrop-blur-sm bg-opacity-90 break-words break-all whitespace-pre-wrap transition-shadow duration-300 ${isSentByCurrentUser
