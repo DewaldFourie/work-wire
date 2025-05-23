@@ -35,21 +35,21 @@ export default function Register() {
 				<input
 					type="text"
 					placeholder="Username"
-					className="input mb-2 w-full"
+					className="input mb-2 w-full dark:text-black"
 					value={username}
 					onChange={(e) => setUsername(e.target.value)}
 				/>
 				<input
 					type="email"
 					placeholder="Email"
-					className="input mb-2 w-full"
+					className="input mb-2 w-full dark:text-black"
 					value={email}
 					onChange={(e) => setEmail(e.target.value)}
 				/>
 				<input
 					type="password"
 					placeholder="Password"
-					className="input mb-4 w-full"
+					className="input mb-4 w-full dark:text-black"
 					value={password}
 					onChange={(e) => setPassword(e.target.value)}
 				/>
