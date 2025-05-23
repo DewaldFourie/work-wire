@@ -44,7 +44,7 @@ const ContactsList = ({ currentUserId, onSelectContact }: Props) => {
 
     return (
         <div className="p-4 space-y-2">
-            <h2 className="text-xl font-semibold flex items-center gap-4">
+            <h2 className="text-xl font-semibold flex items-center gap-4 ">
                 <Users className="w-5 h-5 text-gray-700 dark:text-gray-200" />
                 Contacts
             </h2>

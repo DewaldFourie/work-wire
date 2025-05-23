@@ -40,7 +40,7 @@ const Home = () => {
 	}
 
 	return (
-		<div className="flex h-full">
+		<div className="flex h-full ">
 			{/* Left Sidebar: Contacts List */}
 			<div className="w-1/4 border-r border-gray-200 dark:border-gray-700">
 				<ContactsList currentUserId={user.id} onSelectContact={setSelectedContact} />

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import type { UserProfile } from "../types";
 import { supabase } from "../supabase/client";
 import type { Message } from "../types";
-import { CheckCheck, PackageOpen, ChevronDown, Trash2, SendHorizontal, SmilePlus } from "lucide-react";
+import { CheckCheck, PackageOpen, ChevronDown, Trash2, SendHorizontal, SmilePlus, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRef } from "react";
 import EmojiPicker from 'emoji-picker-react';
@@ -159,12 +159,46 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
             transition={{ duration: 0.3, ease: "easeOut" }}
         >
             {/* Header */}
-            <div className="border-b pb-2 mb-4">
-                <h2 className="text-xl font-semibold">
-                    Chat with {contact.username}
-                </h2>
-            </div>
+            <motion.div
+                key={contact.id} // Ensure smooth animation per contact switch
+                initial={{ opacity: 0,  }}
+                animate={{ opacity: 1,  }}
+                exit={{ opacity: 0, }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="flex items-center justify-between  pb-2 mb-2 px-2 sm:px-0"
+            >
+                {/* Left: Avatar + Info */}
+                <div className="flex items-center space-x-4">
+                    <img
+                        src={contact.profile_image_url || "/default-image.jpg"}
+                        alt="Avatar"
+                        className="w-14 h-14 rounded-full object-cover border border-gray-300 dark:border-gray-600 shadow-sm"
+                    />
+                    <div>
+                        <h2
+                            className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-white transition-colors duration-200 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
+                            onClick={() => { }}
+                        >
+                            {contact.username}
+                        </h2>
+                        <p
+                            className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200 hover:text-blue-500 dark:hover:text-blue-300 cursor-pointer"
+                            onClick={() => { }}
+                        >
+                            {contact.email}
+                        </p>
+                    </div>
+                </div>
 
+                {/* Right: Close Button */}
+                <button
+                    onClick={() => { }}
+                    className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                    <X size={20} />
+                </button>
+            </motion.div>
+            <hr className="border-gray-300 dark:border-gray-600 mb-3"/>
             {/* Chat History */}
             <div className="flex-1 bg-gray-200 dark:bg-gray-900 rounded p-4 overflow-y-auto overflow-x-hidden space-y-4 pb-[200px]">
                 {loading ? (
@@ -228,8 +262,8 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
                                 </span>
                                 <div
                                     className={`relative max-w-[70%] min-w-[200px] p-3 rounded-2xl backdrop-blur-sm bg-opacity-90 break-words break-all whitespace-pre-wrap transition-shadow duration-300 ${isSentByCurrentUser
-                                            ? "bg-blue-600 text-white self-end rounded-br-none shadow-[0_6px_12px_rgba(0,0,0,0.25)] dark:shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
-                                            : "bg-white text-gray-900 self-start rounded-bl-none shadow-[0_6px_12px_rgba(0,0,0,0.1)] dark:bg-gray-800 dark:text-white dark:shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
+                                        ? "bg-blue-600 text-white self-end rounded-br-none shadow-[0_6px_12px_rgba(0,0,0,0.25)] dark:shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
+                                        : "bg-white text-gray-900 self-start rounded-bl-none shadow-[0_6px_12px_rgba(0,0,0,0.1)] dark:bg-gray-800 dark:text-white dark:shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
                                         }`}
                                 >
                                     {msg.content}
