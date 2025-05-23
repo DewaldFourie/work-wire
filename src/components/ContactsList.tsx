@@ -7,12 +7,13 @@ import { Users } from "lucide-react";
 type Props = {
     currentUserId: string;
     onSelectContact: (user: UserProfile) => void;
+    selectedContactId: string | null;
 };
 
-const ContactsList = ({ currentUserId, onSelectContact }: Props) => {
+const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Props) => {
     const [contacts, setContacts] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeContactId, setActiveContactId] = useState<string | null>(null);
+    
 
     useEffect(() => {
         const fetchContacts = async () => {
@@ -34,7 +35,6 @@ const ContactsList = ({ currentUserId, onSelectContact }: Props) => {
     }, [currentUserId]);
 
     const handleSelect = (contact: UserProfile) => {
-        setActiveContactId(contact.id);
         onSelectContact(contact);
     };
 
@@ -54,7 +54,7 @@ const ContactsList = ({ currentUserId, onSelectContact }: Props) => {
             ) : (
                 <ul className="space-y-2 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
                     {contacts.map((contact) => {
-                        const isActive = contact.id === activeContactId;
+                        const isActive = contact.id === selectedContactId;
                         return (
                             <li
                                 key={contact.id}

@@ -13,11 +13,12 @@ import type { EmojiClickData, Theme } from 'emoji-picker-react';
 type Props = {
     contact: UserProfile;
     currentUser: UserProfile;
+    onClose: () => void;
 };
 
 
 
-const ChatWindow = ({ contact, currentUser }: Props) => {
+const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(true);
@@ -192,7 +193,7 @@ const ChatWindow = ({ contact, currentUser }: Props) => {
 
                 {/* Right: Close Button */}
                 <button
-                    onClick={() => { }}
+                    onClick={onClose}
                     className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                     <X size={20} />
