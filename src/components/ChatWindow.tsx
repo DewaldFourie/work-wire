@@ -27,6 +27,8 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
     const [dropdownVisibleId, setDropdownVisibleId] = useState<string | null>(null);
     const bottomRef = useRef<HTMLDivElement | null>(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
+
 
     // Fetch messages when the component mounts or when the contact changes
     // This effect will run whenever the contact changes
@@ -108,6 +110,31 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
     }, []);
 
 
+    useEffect(() => {
+        const channel = supabase.channel("presence:online-users", {
+            config: {
+                presence: { key: currentUser.id },
+            },
+        });
+
+        channel
+            .on("presence", { event: "sync" }, () => {
+                const state = channel.presenceState();
+                const onlineIds = Object.keys(state);
+                setOnlineUserIds(onlineIds);
+            })
+            .subscribe(async (status) => {
+                if (status === "SUBSCRIBED") {
+                    await channel.track({});
+                }
+            });
+
+        return () => {
+            channel.unsubscribe();
+        };
+    }, [currentUser.id]);
+
+    const isOnline = onlineUserIds.includes(contact.id);
 
     // Function to handle sending a message
     // This function will be called when the user clicks the "Send" button
@@ -145,6 +172,7 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
         }
     };
 
+
     // Function to handle emoji picker toggle
     // This function will be called when the user clicks the emoji button
     const handleEmojiSelect = (emojiData: EmojiClickData) => {
@@ -171,11 +199,20 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
             >
                 {/* Left: Avatar + Info */}
                 <div className="flex items-center space-x-4">
-                    <img
-                        src={contact.profile_image_url || "/default-image.jpg"}
-                        alt="Avatar"
-                        className="w-14 h-14 rounded-full object-cover border border-gray-300 dark:border-gray-600 shadow-sm"
-                    />
+                    <div className="relative w-10 h-10">
+                        <img
+                            src={contact.profile_image_url || "/default-image.jpg"}
+                            alt={`${contact.username}'s profile`}
+                            className="w-full h-full object-cover rounded-full "
+                        />
+                        <span
+                            className={`absolute inset-0 rounded-full ring-2 ring-offset-2 shadow-md 
+                                            ${isOnline
+                                    ? "ring-green-500 ring-offset-white dark:ring-offset-gray-900"
+                                    : "ring-gray-300 dark:ring-gray-500 ring-offset-white dark:ring-offset-gray-900"
+                                }`}
+                        ></span>
+                    </div>
                     <div>
                         <h2
                             className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-white transition-colors duration-200 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
@@ -251,7 +288,7 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                                 className={`relative flex flex-col ${isSentByCurrentUser ? "items-end" : "items-start"}`}
                             >
                                 <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 ml-2 mr-2">
-                                    {formattedDate} 
+                                    {formattedDate}
                                 </span>
                                 <div
                                     className={`relative max-w-[70%] min-w-[200px] p-3 rounded-2xl backdrop-blur-sm bg-opacity-90 break-words break-all whitespace-pre-wrap transition-shadow duration-300 ${isSentByCurrentUser

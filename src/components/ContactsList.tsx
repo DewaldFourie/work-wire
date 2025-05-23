@@ -20,6 +20,8 @@ type ContactWithLastMessage = UserProfile & {
 const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Props) => {
     const [contacts, setContacts] = useState<ContactWithLastMessage[]>([]);
     const [loading, setLoading] = useState(true);
+    const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
+
 
     useEffect(() => {
         const fetchContacts = async () => {
@@ -73,6 +75,32 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
         fetchContacts();
     }, [currentUserId]);
 
+
+    useEffect(() => {
+        const channel = supabase.channel("presence:online-users", {
+            config: {
+                presence: { key: currentUserId },
+            },
+        });
+
+        channel
+            .on("presence", { event: "sync" }, () => {
+                const state = channel.presenceState();
+                const onlineIds = Object.keys(state);
+                setOnlineUserIds(onlineIds);
+            })
+            .subscribe(async (status) => {
+                if (status === "SUBSCRIBED") {
+                    await channel.track({});
+                }
+            });
+
+        return () => {
+            channel.unsubscribe();
+        };
+    }, [currentUserId]);
+
+
     // Handle contact selection
     // This function is called when a contact is clicked
     const handleSelect = (contact: UserProfile) => {
@@ -106,6 +134,7 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                         const isActive = contact.id === selectedContactId;
                         const isSentByCurrentUser = contact.last_message_sender_id === currentUserId;
                         const messagePrefix = isSentByCurrentUser ? "You: " : "";
+                        const isOnline = onlineUserIds.includes(contact.id);
 
                         return (
                             <motion.li
@@ -119,11 +148,20 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                                     : "bg-gray-200 dark:bg-gray-900"
                                     }`}
                             >
-                                <img
-                                    src={contact.profile_image_url || "/default-image.jpg"}
-                                    alt={`${contact.username}'s profile`}
-                                    className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
-                                />
+                                <div className="relative w-10 h-10">
+                                    <img
+                                        src={contact.profile_image_url || "/default-image.jpg"}
+                                        alt={`${contact.username}'s profile`}
+                                        className="w-full h-full object-cover rounded-full "
+                                    />
+                                    <span
+                                        className={`absolute inset-0 rounded-full ring-2 ring-offset-2 shadow-md 
+                                            ${isOnline
+                                                ? "ring-green-500 ring-offset-white dark:ring-offset-gray-900"
+                                                : "ring-gray-300 dark:ring-gray-500 ring-offset-white dark:ring-offset-gray-900"
+                                            }`}
+                                    ></span>
+                                </div>
 
                                 <div className="flex-1 min-w-0">
                                     {/* Top row: username + time */}
@@ -141,9 +179,13 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                                     {/* Bottom row: message + check icon */}
                                     <div className="flex justify-between items-center mt-1">
                                         <div className="text-sm text-gray-600 dark:text-gray-400 truncate w-40">
-                                            {contact.last_message_text
-                                                ? `${messagePrefix}${contact.last_message_text}`
-                                                : ""}
+                                            {contact.last_message_text ? (
+                                                `${messagePrefix}${contact.last_message_text}`
+                                            ) : (
+                                                <span className="italic text-xs text-gray-500 dark:text-gray-400">
+                                                    Start a new conversation...
+                                                </span>
+                                            )}
                                         </div>
                                         {isSentByCurrentUser && (
                                             <CheckCheck className="w-4 h-4 text-blue-500 flex-shrink-0 ml-2" />
