@@ -65,7 +65,7 @@ const Welcome = () => {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 1, ease: 'easeOut' }}
-                className="h-full w-full"
+                className="h-full w-full hover:cursor-pointer"
             >
                 <Canvas
                     shadows
