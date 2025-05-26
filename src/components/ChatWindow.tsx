@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import type { UserProfile } from "../types";
 import { supabase } from "../supabase/client";
 import type { Message } from "../types";
@@ -180,6 +181,21 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
         setShowEmojiPicker(false);
     };
 
+    // Function to navigate to the contact's profile
+    // This function will be called when the user clicks on the contact's name
+    const navigate = useNavigate();
+    const handleNavigateToProfile = () => {
+        if (contact?.id) {
+            navigate(`/profile/${contact.id}`);
+        }
+    };
+
+    // Function to handle email click
+    // This function will be called when the user clicks on the contact's email
+    const handleEmailClick = (email: string) => {
+        window.location.href = `mailto:${email}`;
+    };
+
 
     return (
         <motion.div
@@ -199,7 +215,7 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
             >
                 {/* Left: Avatar + Info */}
                 <div className="flex items-center space-x-4">
-                    <div className="relative w-10 h-10">
+                    <div className="relative w-10 h-10 hover:cursor-pointer" onClick={handleNavigateToProfile}>
                         <img
                             src={contact.profile_image_url || "/default-image.jpg"}
                             alt={`${contact.username}'s profile`}
@@ -216,13 +232,13 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                     <div>
                         <h2
                             className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-white transition-colors duration-200 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
-                            onClick={() => { }}
+                            onClick={handleNavigateToProfile}
                         >
                             {contact.username}
                         </h2>
                         <p
                             className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200 hover:text-blue-500 dark:hover:text-blue-300 cursor-pointer"
-                            onClick={() => { }}
+                            onClick={() =>handleEmailClick(contact.email)}
                         >
                             {contact.email}
                         </p>
