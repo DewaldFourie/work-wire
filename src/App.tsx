@@ -25,7 +25,6 @@ function App() {
         >
           <Route index element={<Home />} />
           <Route path="/profile/:id" element={<Profile />} />
-
         </Route>
       </Routes>
     </BrowserRouter>
