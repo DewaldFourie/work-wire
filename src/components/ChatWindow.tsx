@@ -238,7 +238,7 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                         </h2>
                         <p
                             className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200 hover:text-blue-500 dark:hover:text-blue-300 cursor-pointer"
-                            onClick={() =>handleEmailClick(contact.email)}
+                            onClick={() => handleEmailClick(contact.email)}
                         >
                             {contact.email}
                         </p>
@@ -380,6 +380,12 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                         onChange={(e) => setMessage(e.target.value)}
                         className="w-full py-3 pr-20 pl-14 rounded ring-1 ring-blue-500 focus:ring-2 focus:outline-none focus:ring-blue-500 dark:ring-blue-800 dark:focus:ring-blue-800 dark:bg-gray-900 dark:text-white text-lg "
                         placeholder="Type a message..."
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSendMessage();
+                            }
+                        }}
                     />
                     <button
                         onClick={handleSendMessage}
