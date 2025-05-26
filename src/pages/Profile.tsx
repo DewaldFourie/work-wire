@@ -1,8 +1,8 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/auth-context";
 import { supabase } from "../supabase/client";
-import { Pencil, Camera } from "lucide-react";
+import { Pencil, Camera, X } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import { motion } from "framer-motion";
 import Modal from "../components/Modal";
@@ -43,6 +43,9 @@ export default function Profile() {
 
     // Check if the profile belongs to the logged-in user
     const isOwnProfile = user && user.id === profile?.id;
+
+    const navigate = useNavigate();
+
 
     // Fetch the profile data when the component mounts or when the user id changes
     useEffect(() => {
@@ -269,6 +272,13 @@ export default function Profile() {
 
     return (
         <>
+            <button
+                onClick={() => navigate("/")}
+                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
+                aria-label="Close and go home"
+            >
+                <X className="h-5 w-5 text-gray-800 dark:text-gray-200" />
+            </button>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
