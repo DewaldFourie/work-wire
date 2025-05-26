@@ -16,9 +16,16 @@ export default function Navbar() {
                     <button onClick={() => user && navigate(`/profile/${user.id}`)} className="btn">Profile</button>
                 </nav>
             </div>
-            <div className="flex flex-col gap-2">
-                <ThemeToggle />
+            <div className="flex flex-col gap-2 ">
+                <div className="w-full flex items-center justify-center mb-1">
+                    <ThemeToggle width={70} height={30} />
+                </div>       
                 <button onClick={signOut} className="btn">Log Out</button>
+                <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {user ? `Logged in as ${user.email}` : "Not logged in"}
+                    </p>
+                </div>
             </div>
         </div>
     );
