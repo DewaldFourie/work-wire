@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { ThemeContext } from '../contexts/theme-context';
 
 const AnimatedSphere = ({ theme }: { theme: string }) => {
-    const color = new THREE.Color(theme === 'dark' ? '#6366f1' : 'white'); 
+    const color = new THREE.Color(theme === 'dark' ? '#0065F8' : 'white'); 
     const opacity = theme === 'dark' ? 1 : 0.2;
 
     return (
@@ -37,7 +37,7 @@ const WelcomeOverlay = () => (
                     textShadow: '0 2px 4px rgba(0,0,0,0.25)', 
                 }}
             >
-                Welcome to <span className="text-indigo-500">WorkWire</span>
+                Welcome to <span className="text-blue-500">WorkWire</span>
             </h1>
             <p
                 className="text-lg text-gray-700 dark:text-gray-300  font-medium leading-relaxed"
