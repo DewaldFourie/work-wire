@@ -37,7 +37,7 @@ export default function Login() {
     return (
         <>
             {/* Desktop layout */}
-            <div className="hidden lg:flex h-screen w-full overflow-hidden bg-gray-900 dark:bg-gray-100">
+            <div className="hidden lg:flex h-screen w-full overflow-hidden bg-gray-100 dark:bg-gray-900">
                 {/* Left Panel - Login Form */}
                 <div className="absolute top-4 right-4 z-20">
                     <ThemeToggle />
@@ -54,7 +54,6 @@ export default function Login() {
                     >
                         <h2 className="text-2xl font-semibold text-center">Login</h2>
                         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-
                         <input
                             type="email"
                             placeholder="Email"
@@ -69,14 +68,12 @@ export default function Login() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
-
                         <button
                             type="submit"
                             className="bg-indigo-500 text-white text-sm font-medium py-2 rounded hover:bg-indigo-600 transition-colors"
                         >
                             Log In
                         </button>
-
                         <button
                             type="button"
                             onClick={handleDemoLogin}
@@ -84,7 +81,6 @@ export default function Login() {
                         >
                             Continue as Demo User
                         </button>
-
                         <p className="text-xs text-center mt-2">
                             Don't have an account?{" "}
                             <Link to="/register" className="text-blue-500 hover:underline">
@@ -92,28 +88,24 @@ export default function Login() {
                             </Link>
                         </p>
                     </form>
-
                 </motion.div>
-
-
                 {/* Right Panel - Welcome Message over Image */}
-                <div
-                    className="w-2/3 relative bg-cover bg-center"
-                    style={{
-                        backgroundImage: "url('/images/login-bg.jpg')", // Change this path if needed
-                    }}
-                >
-                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+                <div className="w-2/3 relative bg-cover bg-center overflow-hidden">
+                    <img
+                        src="/images/login-bg.jpg"
+                        alt="Welcome Background"
+                        className="absolute inset-0 w-full h-full object-cover opacity-60 dark:opacity-40"
+                    />
+                    <div className="absolute inset-0 bg-black/40 dark:bg-black/60 flex items-center justify-center">
                         <div className="text-white text-center px-10">
-                            <h1 className="text-4xl font-extrabold mb-4">Welcome to WorkWire</h1>
-                            <p className="text-lg font-medium max-w-xl mx-auto">
+                            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 drop-shadow-lg">Welcome to WorkWire</h1>
+                            <p className="text-lg md:text-xl font-medium max-w-xl mx-auto text-white/90 drop-shadow">
                                 Connect, collaborate, and communicate effortlessly with your team.
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
-
             {/* Mobile fallback */}
             <div className="lg:hidden flex items-center justify-center h-screen px-6 bg-gray-100 dark:bg-gray-900 text-center">
                 <div>
