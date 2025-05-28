@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase/client";
 import { motion } from "framer-motion";
-import { Users } from "lucide-react";
+import { Users, CheckCheck } from "lucide-react";
+import { formatMessageDate } from "../utils/date";
 
 type Group = {
     id: string;
     name: string;
+};
+
+type GroupWithLastMessage = Group & {
+    last_message_time: string | null;
+    last_message_text: string | null;
+    last_message_sender_id: string | null;
+    last_message_sender_username?: string | null;
 };
 
 type Props = {
@@ -15,14 +23,13 @@ type Props = {
 };
 
 const GroupsList = ({ currentUserId, onSelectGroup, selectedGroupId }: Props) => {
-    const [groups, setGroups] = useState<Group[]>([]);
+    const [groups, setGroups] = useState<GroupWithLastMessage[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchGroups = async () => {
             setLoading(true);
 
-            // 1) Fetch memberships (just group_id)
             const { data: memData, error: memErr } = await supabase
                 .from("group_members")
                 .select("group_id")
@@ -41,13 +48,12 @@ const GroupsList = ({ currentUserId, onSelectGroup, selectedGroupId }: Props) =>
                 return;
             }
 
-            const ids = memberships.map((m) => m.group_id);
+            const groupIds = memberships.map((m) => m.group_id);
 
-            // 2) Fetch groups by those IDs
             const { data: grpData, error: grpErr } = await supabase
                 .from("groups")
-                .select("id, name")
-                .in("id", ids);
+                .select("id, name, created_by, created_at")
+                .in("id", groupIds);
 
             if (grpErr) {
                 console.error("Error fetching groups:", grpErr.message);
@@ -55,13 +61,126 @@ const GroupsList = ({ currentUserId, onSelectGroup, selectedGroupId }: Props) =>
                 return;
             }
 
-            const fetched = (grpData as Group[]) || [];
-            setGroups(fetched);
+            const baseGroups = (grpData as Group[]) || [];
+
+            const groupsWithMessages: GroupWithLastMessage[] = await Promise.all(
+                baseGroups.map(async (group) => {
+                    const { data: msgData, error: msgErr } = await supabase
+                        .from("messages")
+                        .select("created_at, content, sender_id")
+                        .eq("group_id", group.id)
+                        .eq("deleted", false)
+                        .order("created_at", { ascending: false })
+                        .limit(1);
+
+                    if (msgErr) {
+                        console.error(`Error fetching last message for group ${group.name}:`, msgErr.message);
+                    }
+
+                    const lastMsg = msgData?.[0];
+
+                    let senderUsername: string | null = null;
+
+                    if (lastMsg?.sender_id) {
+                        const { data: userData, error: userErr } = await supabase
+                            .from("users") 
+                            .select("username")
+                            .eq("id", lastMsg.sender_id)
+                            .single();
+
+                        if (userErr) {
+                            console.warn(`Could not fetch sender username for user ${lastMsg.sender_id}:`, userErr.message);
+                        } else {
+                            senderUsername = userData?.username ?? null;
+                        }
+                    }
+
+                    return {
+                        ...group,
+                        last_message_time: lastMsg?.created_at ?? null,
+                        last_message_text: lastMsg?.content ?? null,
+                        last_message_sender_id: lastMsg?.sender_id ?? null,
+                        last_message_sender_username: senderUsername,
+                    };
+                })
+            );
+
+
+            groupsWithMessages.sort((a, b) => {
+                if (!a.last_message_time) return 1;
+                if (!b.last_message_time) return -1;
+                return new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime();
+            });
+
+            setGroups(groupsWithMessages);
             setLoading(false);
         };
 
         fetchGroups();
     }, [currentUserId]);
+
+    useEffect(() => {
+        const channel = supabase.channel('group-messages-realtime')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages',
+            }, async (payload) => {
+                const newMsg = payload.new;
+
+                // Ignore if message isn't for a group
+                if (!newMsg.group_id) return;
+
+                setGroups(prevGroups => {
+                    const groupIndex = prevGroups.findIndex(g => g.id === newMsg.group_id);
+                    if (groupIndex === -1) {
+                        // Not a group the user is part of
+                        return prevGroups;
+                    }
+
+                    // Update group info
+                    const updatedGroups = [...prevGroups];
+                    updatedGroups[groupIndex] = {
+                        ...updatedGroups[groupIndex],
+                        last_message_time: newMsg.created_at,
+                        last_message_text: newMsg.content,
+                        last_message_sender_id: newMsg.sender_id,
+                        // We fetch username async below
+                    };
+
+                    // Sort groups
+                    updatedGroups.sort((a, b) => {
+                        if (!a.last_message_time) return 1;
+                        if (!b.last_message_time) return -1;
+                        return new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime();
+                    });
+
+                    return updatedGroups;
+                });
+
+                // Fetch username (async outside of setState)
+                const { data: userData, error: userErr } = await supabase
+                    .from("users")
+                    .select("username")
+                    .eq("id", newMsg.sender_id)
+                    .single();
+
+                if (!userErr && userData?.username) {
+                    setGroups(prevGroups => {
+                        return prevGroups.map(g => g.id === newMsg.group_id
+                            ? { ...g, last_message_sender_username: userData.username }
+                            : g
+                        );
+                    });
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [currentUserId]);
+
 
     return (
         <motion.div
@@ -89,6 +208,12 @@ const GroupsList = ({ currentUserId, onSelectGroup, selectedGroupId }: Props) =>
                 <ul className="space-y-2 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
                     {groups.map((group) => {
                         const isActive = group.id === selectedGroupId;
+                        const isSentByCurrentUser = group.last_message_sender_id === currentUserId;
+                        const messagePrefix = isSentByCurrentUser
+                            ? "You: "
+                            : group.last_message_sender_username
+                                ? `${group.last_message_sender_username}: `
+                                : "";
                         return (
                             <motion.li
                                 key={group.id}
@@ -96,12 +221,36 @@ const GroupsList = ({ currentUserId, onSelectGroup, selectedGroupId }: Props) =>
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.2 }}
                                 onClick={() => onSelectGroup(group)}
-                                className={`p-3 rounded-lg cursor-pointer transition text-gray-900 dark:text-white truncate ${isActive
-                                        ? "bg-blue-100 dark:bg-blue-900 border-l-2 border-blue-500"
-                                        : "bg-gray-200 dark:bg-gray-900"
+                                className={`p-3 rounded-lg cursor-pointer transition ${isActive
+                                    ? "bg-blue-100 dark:bg-blue-900 border-l-2 border-blue-500"
+                                    : "bg-gray-200 dark:bg-gray-900"
                                     }`}
                             >
-                                {group.name}
+                                <div className="flex justify-between items-center">
+                                    <div className="font-medium text-gray-900 dark:text-white truncate w-40">
+                                        {group.name}
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
+                                        {group.last_message_time
+                                            ? formatMessageDate(group.last_message_time)
+                                            : ""}
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between items-center mt-1">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400 truncate w-60">
+                                        {group.last_message_text ? (
+                                            `${messagePrefix}${group.last_message_text}`
+                                        ) : (
+                                            <span className="italic text-xs text-gray-500 dark:text-gray-400">
+                                                Start a new conversation...
+                                            </span>
+                                        )}
+                                    </div>
+                                    {isSentByCurrentUser && (
+                                        <CheckCheck className="w-4 h-4 text-blue-500 flex-shrink-0 ml-2" />
+                                    )}
+                                </div>
                             </motion.li>
                         );
                     })}

@@ -8,7 +8,7 @@ import type { Group, UserProfile } from "../types";
 
 const Groups = () => {
 	const { user } = useAuth();
-	const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+	const [selectedGroup, setSelectedGroup] = useState<Partial<Group> | null>(null);
 	const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
 
 	useEffect(() => {
@@ -54,7 +54,7 @@ const Groups = () => {
 			<div className="flex-1">
 				{selectedGroup ? (
 					<GroupChatWindow
-						group={selectedGroup}
+						group={selectedGroup as Group}
 						currentUser={currentUserProfile}
 						onClose={() => setSelectedGroup(null)}
 					/>
