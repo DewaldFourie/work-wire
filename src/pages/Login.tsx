@@ -43,7 +43,7 @@ export default function Login() {
             <div className="hidden lg:flex h-screen w-full overflow-hidden bg-gray-100 dark:bg-gray-900">
                 {/* Left Panel - Login Form */}
                 <div className="absolute top-4 right-4 z-20">
-                    <ThemeToggle />
+                    <ThemeToggle width={70} height={30}/>
                 </div>
                 <motion.div
                     initial={{ x: "100%", opacity: 0 }}

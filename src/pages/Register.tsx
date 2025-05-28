@@ -31,7 +31,7 @@ export default function Register() {
 			<div className="hidden lg:flex h-screen w-full overflow-hidden bg-gray-100 dark:bg-gray-900">
 				{/* Theme Toggle */}
 				<div className="absolute top-4 right-4 z-20">
-					<ThemeToggle />
+					<ThemeToggle width={70} height={30}/>
 				</div>
 				{/* Left panel with image and welcome message */}
 				<div className="w-2/3 relative bg-cover bg-center overflow-hidden">
@@ -105,7 +105,7 @@ export default function Register() {
 						/>
 						<input
 							type="password"
-							placeholder="Password"
+							placeholder="Create Password"
 							className="px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-black"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
