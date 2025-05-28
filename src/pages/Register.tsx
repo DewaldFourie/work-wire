@@ -84,7 +84,10 @@ export default function Register() {
 						onSubmit={handleRegister}
 						className="w-full max-w-sm mx-auto text-black dark:text-white flex flex-col gap-4"
 					>
-						<h2 className="text-2xl font-semibold text-center">Register</h2>
+						<div className="width-full flex items-center justify-center gap-4">
+                            <h2 className="text-4xl font-semibold text-center">Sign Up</h2>
+							<img src="./WorkWireLogo.webp" alt="" height={40} width={40} />
+                        </div>
 						{error && <p className="text-red-500 text-sm text-center">{error}</p>}
 						<input
 							type="text"
@@ -109,11 +112,11 @@ export default function Register() {
 						/>
 						<button
 							type="submit"
-							className="bg-indigo-500 text-white text-sm font-medium py-2 rounded hover:bg-indigo-600 transition-colors"
+							className="bg-[#0065F8] text-white text-base font-medium py-2 rounded hover:bg-blue-700 transition-colors"
 						>
 							Sign Up
 						</button>
-						<p className="text-xs text-center mt-2">
+						<p className="text-sm text-center mt-2">
 							Already have an account?{" "}
 							<Link to="/login" className="text-blue-500 hover:underline">
 								Login
