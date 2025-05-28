@@ -88,9 +88,9 @@ export default function Login() {
                             Continue as Demo User
                         </button>
                         <p className="text-sm text-center mt-2">
-                            Don't have an account?{" "}
+                            New to WorkWire?{" "}
                             <Link to="/register" className="text-blue-500 hover:underline">
-                                Register
+                                Create an Account
                             </Link>
                         </p>
                     </form>
