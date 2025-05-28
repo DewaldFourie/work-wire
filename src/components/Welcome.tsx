@@ -23,7 +23,7 @@ const AnimatedSphere = ({ theme }: { theme: string }) => {
 };
 
 
-const WelcomeOverlay = () => (
+const WelcomeOverlay = ({ contextLabel }: { contextLabel: string }) => (
     <Html center>
         <motion.div
             className="w-[40vw] max-w-md text-center px-8 py-6 transition-colors duration-500"
@@ -40,12 +40,12 @@ const WelcomeOverlay = () => (
                 Welcome to <span className="text-blue-500">WorkWire</span>
             </h1>
             <p
-                className="text-lg text-gray-700 dark:text-gray-300  font-medium leading-relaxed"
+                className="text-lg text-gray-700 dark:text-gray-300 font-medium leading-relaxed"
                 style={{
                     textShadow: '0 1px 3px rgba(0,0,0,0.2)',
                 }}
             >
-                Select a contact on the left to start chatting and connect instantly with others.
+                Select a {contextLabel} on the left to start chatting and connect instantly with others.
             </p>
         </motion.div>
     </Html>
@@ -54,35 +54,32 @@ const WelcomeOverlay = () => (
 
 
 
-const Welcome = () => {
+
+const Welcome = ({ contextLabel = "contact" }: { contextLabel?: string }) => {
     const { theme } = useContext(ThemeContext);
     const bgColor = theme === 'dark' ? '#0f172a' : '#f8fafc';
 
     return (
-        <>
-            
-            <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1, ease: 'easeOut' }}
-                className="h-full w-full hover:cursor-pointer"
+        <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, ease: 'easeOut' }}
+            className="h-full w-full hover:cursor-pointer"
+        >
+            <Canvas
+                shadows
+                camera={{ position: [0, 0, 10], fov: 50 }}
+                style={{ background: bgColor }}
             >
-                <Canvas
-                    shadows
-                    camera={{ position: [0, 0, 10], fov: 50 }}
-                    style={{ background: bgColor }}
-                >
-                    <ambientLight intensity={0.5} />
-                    <directionalLight position={[5, 5, 5]} intensity={1} />
-                    <AnimatedSphere theme={theme} />
-                    <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={2} />
-                    <WelcomeOverlay />
-                </Canvas>
-            </motion.div>
-        </>
-
-
+                <ambientLight intensity={0.5} />
+                <directionalLight position={[5, 5, 5]} intensity={1} />
+                <AnimatedSphere theme={theme} />
+                <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={2} />
+                <WelcomeOverlay contextLabel={contextLabel} />
+            </Canvas>
+        </motion.div>
     );
 };
+
 
 export default Welcome;

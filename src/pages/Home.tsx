@@ -59,7 +59,7 @@ const Home = () => {
 						onClose={() => setSelectedContact(null)}
 					/>
 				) : (
-					<Welcome />
+					<Welcome contextLabel="contact"/>
 				)}
 			</div>
 		</div>

@@ -59,7 +59,7 @@ const Groups = () => {
 						onClose={() => setSelectedGroup(null)}
 					/>
 				) : (
-					<Welcome />
+					<Welcome contextLabel="group"/>
 				)}
 			</div>
 		</div>
