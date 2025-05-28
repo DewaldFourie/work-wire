@@ -96,9 +96,13 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
 
     // Scroll to the bottom of the chat window when new messages are added
     useEffect(() => {
-        if (bottomRef.current) {
-            bottomRef.current.scrollIntoView({ behavior: "smooth" });
-        }
+        const timeout = setTimeout(() => {
+            if (bottomRef.current) {
+                bottomRef.current.scrollIntoView({ behavior: "smooth" });
+            }
+        }, 100); // 100ms delay
+
+        return () => clearTimeout(timeout);
     }, [messages]);
 
     // Close emoji picker when clicking outside of it

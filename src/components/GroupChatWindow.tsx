@@ -45,7 +45,11 @@ export default function GroupChatWindow({
         const load = async () => {
             setLoading(true);
 
-            // Fetch messages by group_id 
+            // 👇 Clear previous state so stale data doesn't persist
+            setMessages([]);
+            setProfiles({});
+
+            // 1. Load messages
             const { data: raw, error: err } = await supabase
                 .from("messages")
                 .select("*")
@@ -56,35 +60,45 @@ export default function GroupChatWindow({
 
             if (err) {
                 console.error(err.message);
-                setMessages([]);
             } else {
                 setMessages((raw as Message[]) || []);
             }
 
-            // Fetch distinct other senders
-            const otherIds = Array.from(
-                new Set(
-                    ((raw as Message[]) || [])
-                        .map((m) => m.sender_id)
-                        .filter((id) => id !== currentUser.id)
-                )
-            );
-            if (otherIds.length) {
-                const { data: users, error: uErr } = await supabase
-                    .from("users")
-                    .select("id, username, profile_image_url")
-                    .in("id", otherIds);
-                if (uErr) console.error(uErr.message);
-                else
-                    (users as UserProfile[]).forEach((u) =>
-                        setProfiles((p) => ({ ...p, [u.id]: u }))
-                    );
+            // 2. Fetch group members
+            const { data: memberIds, error: mErr } = await supabase
+                .from("group_members")
+                .select("user_id")
+                .eq("group_id", group.id);
+
+            if (mErr) {
+                console.error("Failed to fetch group member IDs:", mErr.message);
+            } else {
+                const ids = (memberIds || []).map((m) => m.user_id);
+
+                if (ids.length > 0) {
+                    const { data: users, error: uErr } = await supabase
+                        .from("users")
+                        .select("id, username, profile_image_url")
+                        .in("id", ids);
+
+                    if (uErr) {
+                        console.error("Failed to fetch user profiles:", uErr.message);
+                    } else {
+                        const newProfiles: Record<string, UserProfile> = {};
+                        (users as UserProfile[]).forEach((u) => {
+                            newProfiles[u.id] = u;
+                        });
+                        setProfiles(newProfiles); // 👈 overwrite instead of merging
+                    }
+                }
             }
 
             setLoading(false);
         };
+
         load();
     }, [group.id, currentUser.id]);
+
 
     // Realtime subscription on group_id
     // Realtime subscription to new group messages
@@ -141,8 +155,15 @@ export default function GroupChatWindow({
 
     // 3) Auto-scroll
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        const timeout = setTimeout(() => {
+            if (bottomRef.current) {
+                bottomRef.current.scrollIntoView({ behavior: "smooth" });
+            }
+        }, 500); // 100ms delay
+
+        return () => clearTimeout(timeout);
     }, [messages]);
+
 
     // 4) Send using group_id
     const send = async () => {
@@ -180,9 +201,29 @@ export default function GroupChatWindow({
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="flex items-center justify-between pb-2 mb-2 px-2 sm:px-0"
             >
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-white">
-                    {group.name}
-                </h2>
+                {/* Left: Group Name + Member Avatars */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-10 overflow-hidden">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-white whitespace-nowrap">
+                        {group.name}
+                    </h2>
+                    {/* Member list: scrollable if overflow */}
+                    <div className="flex items-center gap-2 overflow-x-auto max-w-[60vw] sm:max-w-[40vw] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
+                        {Object.values(profiles).map((user) => (
+                            <div className="flex items-center gap-1 flex-shrink-0" key={user.id}>
+                                <img
+                                    src={user.profile_image_url || "/default-image.jpg"}
+                                    alt={user.username}
+                                    title={user.username}
+                                    className="w-6 h-6  rounded-full border border-gray-500 dark:border-gray-700 hover:border-blue-400 hover:ring-2 hover:ring-blue-400 cursor-pointer"
+                                    onClick={() => goProfile(user.id)}
+                                />
+                                <span className="text-xs truncate max-w-[6rem]">{user.username}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Right: Close Button */}
                 <button
                     onClick={onClose}
                     className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -190,18 +231,20 @@ export default function GroupChatWindow({
                     <X size={20} />
                 </button>
             </motion.div>
+
             <hr className="border-gray-300 dark:border-gray-600 mb-3" />
 
             {/* Messages */}
             <div className="flex-1 bg-gray-200 dark:bg-gray-900 rounded p-4 overflow-y-auto overflow-x-hidden space-y-4 pb-[100px]">
                 {loading ? (
                     <motion.div
-                        className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400"
+                        className="flex flex-col items-center justify-center h-full  text-gray-700 dark:text-gray-300"
                         initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, ease: "easeOut" }}
                     >
-                        Loading messages...
+                        <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-500" />
+                        <p className="text-base font-medium">Loading messages...</p>
                     </motion.div>
                 ) : messages.length === 0 ? (
                     <motion.div
