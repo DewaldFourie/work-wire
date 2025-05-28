@@ -8,8 +8,6 @@ import { House, Contact, BookText, Settings, LogOut, Users } from "lucide-react"
 export default function Navbar() {
     const { user } = useAuth();
     const navigate = useNavigate();
-    console.log("user", user);
-
 
     return (
         <div className="w-64 bg-gray-200 dark:bg-gray-900 h-screen flex flex-col justify-between p-4 pb-2">
@@ -23,7 +21,7 @@ export default function Navbar() {
                         <House className="w-5 h-5" />
                         Home
                     </button>
-                    <button className="btn">
+                    <button onClick={() => navigate("/groups")} className="btn">
                         <Users className="w-5 h-5" />
                         Groups
                     </button>

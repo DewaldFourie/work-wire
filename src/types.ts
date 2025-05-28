@@ -18,5 +18,13 @@ export type Message = {
     content: string;
     created_at: string;
     deleted: boolean;
+    is_group_message: boolean;
+    group_id?: string; 
 };
 
+export type Group = {
+	id: string;
+	name: string;
+	created_by: string;
+	created_at: string;
+};
