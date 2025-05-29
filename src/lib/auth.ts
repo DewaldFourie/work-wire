@@ -43,9 +43,9 @@ export async function signUpWithEmail({
         throw new Error("User signup failed: no user returned.");
     }
 
-    // 3. Insert user info into your 'users' table
     const { id } = data.user;
 
+    // 3. Insert user info into 'users' table
     const { error: insertError } = await supabase.from("users").insert([
         {
             id,
@@ -55,12 +55,32 @@ export async function signUpWithEmail({
     ]);
 
     if (insertError) {
-        // Optional: You could consider rolling back auth user here if insert fails
         throw new Error("Failed to insert user profile: " + insertError.message);
+    }
+
+    // 4. Add user to "WorkWire Global" group
+    const WORKWIRE_GROUP_ID = import.meta.env.VITE_WORKWIRE_GLOBAL_GROUP_ID;
+
+    if (!WORKWIRE_GROUP_ID) {
+        throw new Error("Missing WorkWire Global group ID");
+    }
+
+    const { error: groupInsertError } = await supabase
+        .from("group_members")
+        .insert([
+            {
+                group_id: WORKWIRE_GROUP_ID,
+                user_id: id,
+            },
+        ]);
+
+    if (groupInsertError) {
+        throw new Error("Failed to add user to WorkWire Global group: " + groupInsertError.message);
     }
 
     return data;
 }
+
 
 
 

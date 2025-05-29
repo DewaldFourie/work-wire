@@ -207,7 +207,7 @@ export default function GroupChatWindow({
                         {group.name}
                     </h2>
                     {/* Member list: scrollable if overflow */}
-                    <div className="flex items-center gap-2 overflow-x-auto max-w-[47vw] scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 py-2 px-1">
+                    <div className="flex items-center gap-2 overflow-x-auto max-w-[47vw] scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 py-2 px-1 mr-4">
                         {Object.values(profiles).map((user) => (
                             <div className="flex items-center gap-1 flex-shrink-0" key={user.id}>
                                 <img
