@@ -3,6 +3,7 @@ import { supabase } from "../supabase/client";
 import { motion } from "framer-motion";
 import { Users, CheckCheck } from "lucide-react";
 import { formatMessageDate } from "../utils/date";
+import { IconUsersPlus } from '@tabler/icons-react';
 
 type Group = {
     id: string;
@@ -83,7 +84,7 @@ const GroupsList = ({ currentUserId, onSelectGroup, selectedGroupId }: Props) =>
 
                     if (lastMsg?.sender_id) {
                         const { data: userData, error: userErr } = await supabase
-                            .from("users") 
+                            .from("users")
                             .select("username")
                             .eq("id", lastMsg.sender_id)
                             .single();
@@ -184,80 +185,101 @@ const GroupsList = ({ currentUserId, onSelectGroup, selectedGroupId }: Props) =>
 
     return (
         <motion.div
-            className="p-4 space-y-2 min-h-full"
+            className="p-4 min-h-full flex flex-col space-y-6"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
         >
-            <h2 className="text-xl font-semibold flex items-center gap-4">
-                <Users className="w-5 h-5 text-gray-700 dark:text-gray-200" />
-                Groups
-            </h2>
-            <hr className="border-t border-gray-300 dark:border-gray-700 mb-4" />
+            {/* Header Section */}
+            <div className="space-y-2">
+                <h2 className="text-xl font-semibold flex items-center gap-4">
+                    <Users className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+                    Groups
+                </h2>
+                <hr className="border-t border-gray-300 dark:border-gray-700" />
+            </div>
 
-            {loading ? (
-                <div className="flex flex-col items-center justify-center gap-3 mt-36 text-gray-700 dark:text-gray-300">
-                    <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-500" />
-                    <p className="text-base font-medium">Loading groups...</p>
-                </div>
-            ) : groups.length === 0 ? (
-                <div className="text-gray-500 dark:text-gray-400">
-                    You are not a member of any groups.
-                </div>
-            ) : (
-                <ul className="space-y-2 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
-                    {groups.map((group) => {
-                        const isActive = group.id === selectedGroupId;
-                        const isSentByCurrentUser = group.last_message_sender_id === currentUserId;
-                        const messagePrefix = isSentByCurrentUser
-                            ? "You: "
-                            : group.last_message_sender_username
-                                ? `${group.last_message_sender_username}: `
-                                : "";
-                        return (
-                            <motion.li
-                                key={group.id}
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2 }}
-                                onClick={() => onSelectGroup(group)}
-                                className={`p-3 rounded-lg cursor-pointer transition ${isActive
-                                    ? "bg-blue-100 dark:bg-blue-900 border-l-2 border-blue-500"
-                                    : "bg-gray-200 dark:bg-gray-900"
-                                    }`}
-                            >
-                                <div className="flex justify-between items-center">
-                                    <div className="font-medium text-gray-900 dark:text-white truncate w-40">
-                                        {group.name}
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
-                                        {group.last_message_time
-                                            ? formatMessageDate(group.last_message_time)
-                                            : ""}
-                                    </div>
-                                </div>
+            {/* Create Group Button */}
+            <div className="flex justify-center mb-4">
+                <button
+                    onClick={() => {
+                        // Replace with modal or navigation logic
+                        console.log("Create Group Clicked");
+                    }}
+                    className="widrh-full flex items-center justify-center gap-2 px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition"
+                >
+                    <IconUsersPlus className="w-5 h-5" />
+                    Create New Group
+                </button>
+            </div>
 
-                                <div className="flex justify-between items-center mt-1">
-                                    <div className="text-sm text-gray-600 dark:text-gray-400 truncate w-60">
-                                        {group.last_message_text ? (
-                                            `${messagePrefix}${group.last_message_text}`
-                                        ) : (
-                                            <span className="italic text-xs text-gray-500 dark:text-gray-400">
-                                                Start a new conversation...
-                                            </span>
+            {/* Group List */}
+            <div className="flex-1 overflow-y-auto pr-2">
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center gap-3 mt-36 text-gray-700 dark:text-gray-300">
+                        <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-500" />
+                        <p className="text-base font-medium">Loading groups...</p>
+                    </div>
+                ) : groups.length === 0 ? (
+                    <div className="text-gray-500 dark:text-gray-400">
+                        You are not a member of any groups.
+                    </div>
+                ) : (
+                    <ul className="space-y-2 max-h-[calc(100vh-200px)]">
+                        {groups.map((group) => {
+                            const isActive = group.id === selectedGroupId;
+                            const isSentByCurrentUser = group.last_message_sender_id === currentUserId;
+                            const messagePrefix = isSentByCurrentUser
+                                ? "You: "
+                                : group.last_message_sender_username
+                                    ? `${group.last_message_sender_username}: `
+                                    : "";
+                            return (
+                                <motion.li
+                                    key={group.id}
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    onClick={() => onSelectGroup(group)}
+                                    className={`p-3 rounded-lg cursor-pointer transition ${isActive
+                                            ? "bg-blue-100 dark:bg-blue-900 border-l-2 border-blue-500"
+                                            : "bg-gray-200 dark:bg-gray-900"
+                                        }`}
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <div className="font-medium text-gray-900 dark:text-white truncate w-40">
+                                            {group.name}
+                                        </div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
+                                            {group.last_message_time
+                                                ? formatMessageDate(group.last_message_time)
+                                                : ""}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center mt-1">
+                                        <div className="text-sm text-gray-600 dark:text-gray-400 truncate w-60">
+                                            {group.last_message_text ? (
+                                                `${messagePrefix}${group.last_message_text}`
+                                            ) : (
+                                                <span className="italic text-xs text-gray-500 dark:text-gray-400">
+                                                    Start a new conversation...
+                                                </span>
+                                            )}
+                                        </div>
+                                        {isSentByCurrentUser && (
+                                            <CheckCheck className="w-4 h-4 text-blue-500 flex-shrink-0 ml-2" />
                                         )}
                                     </div>
-                                    {isSentByCurrentUser && (
-                                        <CheckCheck className="w-4 h-4 text-blue-500 flex-shrink-0 ml-2" />
-                                    )}
-                                </div>
-                            </motion.li>
-                        );
-                    })}
-                </ul>
-            )}
+                                </motion.li>
+                            );
+                        })}
+                    </ul>
+                )}
+            </div>
         </motion.div>
     );
+
 };
 
 export default GroupsList;
