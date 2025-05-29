@@ -22,7 +22,7 @@ const CreateGroupModal = ({ onClose, currentUserId }: Props) => {
     // Fetch contacts once
     useEffect(() => {
         const fetchUsers = async () => {
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from("users")
                 .select("id, username")
                 .neq("id", currentUserId)
@@ -53,7 +53,7 @@ const CreateGroupModal = ({ onClose, currentUserId }: Props) => {
         setSubmitting(true);
 
         // uniqueness check
-        const { data: exists, error: checkErr } = await supabase
+        const { data: exists } = await supabase
             .from("groups")
             .select("id")
             .eq("name", groupName.trim())
