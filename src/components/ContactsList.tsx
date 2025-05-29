@@ -194,7 +194,7 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                         return (
                             <motion.li
                                 key={contact.id}
-                                initial={{ opacity: 0, y: 5 }}
+                                initial={{ opacity: 0, y: 0 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.2 }}
                                 onClick={() => handleSelect(contact)}
