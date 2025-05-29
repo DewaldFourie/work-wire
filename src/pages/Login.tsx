@@ -10,13 +10,17 @@ export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false); 
     const navigate = useNavigate();
     const { theme } = useTheme();
     const backgroundImage = theme === "dark" ? "/dark-right.webp" : "/light-right.webp";
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
+        setError(null); 
         const { error } = await supabase.auth.signInWithPassword({ email, password });
+        setLoading(false); 
         if (error) {
             setError(error.message);
         } else {
@@ -25,6 +29,7 @@ export default function Login() {
     };
 
     const handleDemoLogin = async () => {
+        setLoading(true); 
         try {
             await logInAsDemoUser();
             navigate("/");
@@ -34,6 +39,8 @@ export default function Login() {
             } else {
                 setError("An unexpected error occurred");
             }
+        } finally {
+            setLoading(false); 
         }
     };
 
@@ -43,7 +50,7 @@ export default function Login() {
             <div className="hidden lg:flex h-screen w-full overflow-hidden bg-gray-100 dark:bg-gray-900">
                 {/* Left Panel - Login Form */}
                 <div className="absolute top-4 right-4 z-20">
-                    <ThemeToggle width={70} height={30}/>
+                    <ThemeToggle width={70} height={30} />
                 </div>
                 <motion.div
                     initial={{ x: "100%", opacity: 0 }}
@@ -76,14 +83,24 @@ export default function Login() {
                         />
                         <button
                             type="submit"
-                            className="bg-[#0065F8] text-white text-base font-medium py-2 rounded hover:bg-blue-700 transition-colors"
+                            disabled={loading}
+                            className={`text-white text-base font-medium py-2 rounded transition-colors ${
+                                loading
+                                    ? "bg-blue-400"
+                                    : "bg-[#0065F8] hover:bg-blue-700"
+                            }`}
                         >
-                            Log In
+                            {loading ? "Logging in..." : "Log In"}
                         </button>
                         <button
                             type="button"
                             onClick={handleDemoLogin}
-                            className="bg-indigo-500 text-white text-base font-medium py-2 rounded hover:bg-indigo-700 transition-colors"
+                            disabled={loading}
+                            className={`text-white text-base font-medium py-2 rounded transition-colors ${
+                                loading
+                                    ? "bg-indigo-400"
+                                    : "bg-indigo-500 hover:bg-indigo-700"
+                            }`}
                         >
                             Continue as Demo User
                         </button>
@@ -104,13 +121,16 @@ export default function Login() {
                         className="absolute inset-0 w-full h-full object-cover object-center opacity-40 dark:opacity-40"
                     />
                     <div
-                        className={`absolute inset-0 bg-gradient-to-bl ${theme === "dark"
-                            ? "from-gray-900/60 to-transparent"
-                            : "from-white/90 via-white/70 to-transparent"
-                            }`}
+                        className={`absolute inset-0 bg-gradient-to-bl ${
+                            theme === "dark"
+                                ? "from-gray-900/60 to-transparent"
+                                : "from-white/90 via-white/70 to-transparent"
+                        }`}
                     ></div>
                     <div
-                        className={`absolute inset-0 flex top-[30%]  justify-center ${theme === "light" ? "pl-14 " : ""}`}
+                        className={`absolute inset-0 flex top-[30%] justify-center ${
+                            theme === "light" ? "pl-14 " : ""
+                        }`}
                     >
                         <motion.div
                             initial={{ opacity: 0, y: 40 }}
@@ -137,6 +157,7 @@ export default function Login() {
                     </div>
                 </div>
             </div>
+
             {/* Mobile fallback */}
             <div className="lg:hidden flex items-center justify-center h-screen px-6 bg-gray-100 dark:bg-gray-900 text-center">
                 <div>
