@@ -10,6 +10,7 @@ export default function Register() {
 	const [password, setPassword] = useState("");
 	const [username, setUsername] = useState("");
 	const [error, setError] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState(false);
 	const navigate = useNavigate();
 	const { theme } = useTheme();
 
@@ -17,11 +18,15 @@ export default function Register() {
 
 	const handleRegister = async (e: React.FormEvent) => {
 		e.preventDefault();
+		setIsLoading(true);
+		setError(null);
 		try {
 			await signUpWithEmail({ email, password, username });
 			navigate("/");
 		} catch (err) {
 			setError((err as Error).message);
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -85,9 +90,9 @@ export default function Register() {
 						className="w-full max-w-sm mx-auto text-black dark:text-white flex flex-col gap-4"
 					>
 						<div className="width-full flex items-center justify-center gap-4">
-                            <h2 className="text-4xl font-semibold text-center">Sign Up</h2>
+							<h2 className="text-4xl font-semibold text-center">Sign Up</h2>
 							<img src="./WorkWireLogo.webp" alt="" height={40} width={40} />
-                        </div>
+						</div>
 						{error && <p className="text-red-500 text-sm text-center">{error}</p>}
 						<input
 							type="text"
@@ -112,9 +117,12 @@ export default function Register() {
 						/>
 						<button
 							type="submit"
-							className="bg-[#0065F8] text-white text-base font-medium py-2 rounded hover:bg-blue-700 transition-colors"
+							disabled={isLoading}
+							className={`bg-[#0065F8] text-white text-base font-medium py-2 rounded transition-colors ${
+								isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+							}`}
 						>
-							Sign Up
+							{isLoading ? "Signing Up..." : "Sign Up"}
 						</button>
 						<p className="text-sm text-center mt-2">
 							Already have an account?{" "}
