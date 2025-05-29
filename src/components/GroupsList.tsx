@@ -206,7 +206,7 @@ const GroupsList = ({ currentUserId, onSelectGroup, selectedGroupId }: Props) =>
                                     <p className="text-base font-medium">Loading groups...</p>
                                 </div>
                             ) : groups.length === 0 ? (
-                                <div className="text-gray-500 dark:text-gray-400">
+                                <div className="text-gray-500 dark:text-gray-400 pl-4">
                                     You are not a member of any groups.
                                 </div>
                             ) : (
