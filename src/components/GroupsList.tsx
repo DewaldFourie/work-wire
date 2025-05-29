@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, CheckCheck } from "lucide-react";
@@ -29,8 +29,7 @@ const GroupsList = ({ currentUserId, onSelectGroup, selectedGroupId }: Props) =>
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
 
-    useEffect(() => {
-        const fetchGroups = async () => {
+    const fetchGroups = useCallback(async () => {
             setLoading(true);
             const { data: memData, error: memErr } = await supabase
                 .from("group_members")
@@ -93,10 +92,11 @@ const GroupsList = ({ currentUserId, onSelectGroup, selectedGroupId }: Props) =>
 
             setGroups(withMsgs);
             setLoading(false);
-        };
+        }, [currentUserId]);
 
+    useEffect(() => {
         fetchGroups();
-    }, [currentUserId]);
+    }, [fetchGroups]);
 
     useEffect(() => {
         const channel = supabase
@@ -174,7 +174,10 @@ const GroupsList = ({ currentUserId, onSelectGroup, selectedGroupId }: Props) =>
                 {showCreateModal ? (
                     <div className="absolute inset-0">
                         <CreateGroupModal
-                            onClose={() => setShowCreateModal(false)}
+                            onClose={() => {
+                                setShowCreateModal(false);
+                                fetchGroups();
+                            }}
                             currentUserId={currentUserId}
                         />
                     </div>
