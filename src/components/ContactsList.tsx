@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase/client";
 import type { UserProfile } from "../types";
-import { Users, CheckCheck } from "lucide-react";
+import { User, CheckCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatMessageDate } from "../utils/date";
 
@@ -171,7 +171,7 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
             transition={{ duration: 0.3, ease: "easeOut" }}
         >
             <h2 className="text-xl font-semibold flex items-center gap-4">
-                <Users className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+                <User className="w-5 h-5 text-gray-700 dark:text-gray-200" />
                 Contacts
             </h2>
             <hr className="border-t border-gray-300 dark:border-gray-700 mb-4" />
