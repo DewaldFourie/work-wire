@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import type { UserProfile } from "../types";
 import { supabase } from "../supabase/client";
 import type { Message } from "../types";
-import { CheckCheck, PackageOpen, ChevronDown, Trash2, SendHorizontal, SmilePlus, X, ImageIcon, Download } from "lucide-react";
+import { CheckCheck, PackageOpen, Trash2, SendHorizontal, SmilePlus, X, ImageIcon, Download, ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRef } from "react";
 import EmojiPicker from 'emoji-picker-react';
@@ -358,7 +358,7 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                         messages.map((msg) => {
                             const isSentByCurrentUser = msg.sender_id === currentUser.id;
                             const formattedDate = formatMessageDateTime(msg.created_at);
-
+                            const isImage = !!msg.image_url;
                             return (
                                 <motion.div
                                     key={msg.id}
@@ -373,40 +373,59 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                                         {formattedDate}
                                     </span>
                                     <div
-                                        className={`relative max-w-[70%] min-w-[200px] p-3 rounded-2xl backdrop-blur-sm bg-opacity-90 break-words break-all whitespace-pre-wrap transition-shadow duration-300 ${isSentByCurrentUser
-                                            ? "bg-blue-600 text-white self-end rounded-br-none shadow-[0_6px_12px_rgba(0,0,0,0.25)] dark:shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
-                                            : "bg-white text-gray-900 self-start rounded-bl-none shadow-[0_6px_12px_rgba(0,0,0,0.1)] dark:bg-gray-800 dark:text-white dark:shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
+                                        className={`relative group max-w-[70%] min-w-[200px] ${isImage ? "p-0" : "p-3"
+                                            } rounded-2xl backdrop-blur-sm bg-opacity-90 transition-shadow duration-300 break-words whitespace-pre-wrap ${isSentByCurrentUser
+                                                ? `${isImage ? "" : "rounded-br-none"} bg-blue-600 text-white self-end shadow-[0_6px_12px_rgba(0,0,0,0.25)] dark:shadow-[0_6px_12px_rgba(0,0,0,0.5)]`
+                                                : `${isImage ? "" : "rounded-bl-none"} bg-white text-gray-900 self-start shadow-[0_6px_12px_rgba(0,0,0,0.1)] dark:bg-gray-800 dark:text-white dark:shadow-[0_6px_12px_rgba(0,0,0,0.5)]`
                                             }`}
                                     >
-                                        {msg.image_url ? (
-                                            <img
-                                                src={msg.image_url}
-                                                alt="Sent image"
-                                                className="max-w-full max-h-40 rounded object-contain cursor-pointer"
-                                                loading="lazy"
-                                                onClick={() => setSelectedImageUrl(msg.image_url!)}
-                                            />
+                                        {isImage ? (
+                                            <div className="relative">
+                                                <img
+                                                    src={msg.image_url}
+                                                    alt="Sent image"
+                                                    className="rounded-2xl max-w-full max-h-48 object-cover cursor-pointer"
+                                                    loading="lazy"
+                                                    onClick={() => setSelectedImageUrl(msg.image_url!)}
+                                                />
+                                                {isSentByCurrentUser && (
+                                                    <div
+                                                        className="absolute bottom-2 right-2 bg-black/50 hover:bg-black/70 p-1 rounded-full cursor-pointer transition"
+                                                        onClick={() =>
+                                                            setDropdownVisibleId(dropdownVisibleId === msg.id ? null : msg.id)
+                                                        }
+                                                    >
+                                                        {hoveredMessageId === msg.id ? (
+                                                            <ChevronUp className="w-4 h-4 text-white" />
+                                                        ) : (
+                                                            <CheckCheck className="w-4 h-4 text-white" />
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         ) : (
-                                            msg.content
-                                        )}
-                                        {isSentByCurrentUser && (
-                                            <div
-                                                className="absolute bottom-1 right-2 cursor-pointer"
-                                                onClick={() =>
-                                                    setDropdownVisibleId(dropdownVisibleId === msg.id ? null : msg.id)
-                                                }
-                                            >
-                                                {hoveredMessageId === msg.id ? (
-                                                    <ChevronDown className="w-4 h-4 text-white opacity-70" />
-                                                ) : (
-                                                    <CheckCheck className="w-4 h-4 text-white opacity-70" />
+                                            <div className="pr-6">
+                                                {msg.content}
+                                                {isSentByCurrentUser && (
+                                                    <div
+                                                        className="absolute bottom-1 right-2 cursor-pointer"
+                                                        onClick={() =>
+                                                            setDropdownVisibleId(dropdownVisibleId === msg.id ? null : msg.id)
+                                                        }
+                                                    >
+                                                        {hoveredMessageId === msg.id ? (
+                                                            <ChevronUp className="w-4 h-4 text-white opacity-70" />
+                                                        ) : (
+                                                            <CheckCheck className="w-4 h-4 text-white opacity-70" />
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
                                         )}
-
                                         {/* Mini Dropdown */}
                                         {dropdownVisibleId === msg.id && (
-                                            <div className="absolute z-10 top-full right-0 mb-2 bg-white dark:bg-gray-700 border dark:border-gray-700 rounded shadow py-1 px-2 text-sm"
+                                            <div
+                                                className={`absolute z-10 ${isImage ? 'bottom-7 right-1' : 'bottom-3'} right-0 mb-2 shadow py-1 px-2 text-sm bg-transparent`}
                                                 onMouseEnter={() => setHoveredMessageId(msg.id)}
                                                 onMouseLeave={() => {
                                                     setDropdownVisibleId(null);
@@ -415,7 +434,7 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                                             >
                                                 <button
                                                     onClick={() => handleDeleteMessage(msg.id)}
-                                                    className="text-red-600 hover:underline"
+                                                    className="text-red-600 hover:underline bg-transparent"
                                                 >
                                                     <Trash2 className="w-4 h-4 inline" />
                                                 </button>

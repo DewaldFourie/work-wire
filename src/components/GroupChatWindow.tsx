@@ -5,7 +5,7 @@ import type { UserProfile, Message } from "../types";
 import {
     X,
     SendHorizontal,
-    ChevronDown,
+    ChevronUp,
     Trash2,
     CheckCheck,
     PackageOpen,
@@ -318,7 +318,7 @@ export default function GroupChatWindow({
                                             }
                                         >
                                             {hoveredId === msg.id ? (
-                                                <ChevronDown className="w-4 h-4 text-white opacity-70" />
+                                                <ChevronUp className="w-4 h-4 text-white opacity-70" />
                                             ) : (
                                                 <CheckCheck className="w-4 h-4 text-white opacity-70" />
                                             )}
@@ -327,7 +327,7 @@ export default function GroupChatWindow({
 
                                     {dropdownFor === msg.id && (
                                         <div
-                                            className="absolute z-10 top-full right-0 mb-2 bg-white dark:bg-gray-700 border dark:border-gray-700 rounded shadow py-1 px-2 text-sm"
+                                            className="absolute z-10 bottom-3 right-0 mb-2 rounded shadow py-1 px-2 text-sm bg-transparent"
                                             onMouseEnter={() => setHoveredId(msg.id)}
                                             onMouseLeave={() => {
                                                 setDropdownFor(null);
