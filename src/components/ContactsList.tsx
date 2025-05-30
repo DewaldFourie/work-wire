@@ -15,6 +15,7 @@ type ContactWithLastMessage = UserProfile & {
     last_message_time: string | null;
     last_message_text: string | null;
     last_message_sender_id: string | null;
+    last_message_image_url: string | null;
 };
 
 const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Props) => {
@@ -41,7 +42,7 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                 (data as UserProfile[]).map(async (contact) => {
                     const { data: messages, error: msgError } = await supabase
                         .from("messages")
-                        .select("created_at, content, sender_id")
+                        .select("created_at, content, sender_id, image_url")
                         .eq("deleted", false)
                         .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${contact.id}),and(sender_id.eq.${contact.id},receiver_id.eq.${currentUserId})`)
                         .order("created_at", { ascending: false })
@@ -58,6 +59,7 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                         last_message_time: lastMessage?.created_at ?? null,
                         last_message_text: lastMessage?.content ?? null,
                         last_message_sender_id: lastMessage?.sender_id ?? null,
+                        last_message_image_url: lastMessage?.image_url ?? null
                     };
                 })
             );
@@ -127,6 +129,7 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                                     last_message_time: newMsg.created_at,
                                     last_message_text: newMsg.content,
                                     last_message_sender_id: newMsg.sender_id,
+                                    last_message_image_url: newMsg.image_url,
                                 };
                             }
                             return contact;
@@ -234,7 +237,9 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                                     {/* Bottom row: message + check icon */}
                                     <div className="flex justify-between items-center mt-1">
                                         <div className="text-sm text-gray-600 dark:text-gray-400 truncate w-40">
-                                            {contact.last_message_text ? (
+                                            {contact.last_message_image_url ? (
+                                                <span className="italic text-xs text-gray-500 dark:text-gray-400">Image</span>
+                                            ) : contact.last_message_text ? (
                                                 `${messagePrefix}${contact.last_message_text}`
                                             ) : (
                                                 <span className="italic text-xs text-gray-500 dark:text-gray-400">
