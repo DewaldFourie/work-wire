@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import type { UserProfile } from "../types";
 import { supabase } from "../supabase/client";
 import type { Message } from "../types";
-import { CheckCheck, PackageOpen, ChevronDown, Trash2, SendHorizontal, SmilePlus, X } from "lucide-react";
+import { CheckCheck, PackageOpen, ChevronDown, Trash2, SendHorizontal, SmilePlus, X, ImageIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRef } from "react";
 import EmojiPicker from 'emoji-picker-react';
@@ -158,6 +158,66 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
             setMessage(""); // Clear input
         }
     };
+
+
+    // Function to handle image upload
+    // This function will be called when the user uploads an image
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        // Optionally limit file size/type here
+
+        try {
+            // Generate a unique filename to avoid collisions
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${currentUser.id}_${Date.now()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            // Upload the file to supabase storage
+            const { error: uploadError } = await supabase.storage
+                .from('chat-images')
+                .upload(filePath, file);
+
+            if (uploadError) {
+                console.error("Error uploading image:", uploadError.message);
+                return;
+            }
+
+            // Get the public URL for the uploaded image
+            const { data: publicUrlData } = supabase.storage
+                .from('chat-images')
+                .getPublicUrl(filePath);
+
+            const imageUrl = publicUrlData.publicUrl;
+
+            // Insert the message with image URL and empty content
+            const { error: insertError } = await supabase
+                .from('messages')
+                .insert({
+                    sender_id: currentUser.id,
+                    receiver_id: contact.id,
+                    content: "",  // No text content
+                    image_url: imageUrl,
+                });
+
+            if (insertError) {
+                console.error("Error sending image message:", insertError.message);
+                return;
+            }
+
+            // Reset input states if needed
+            setMessage("");
+            setShowEmojiPicker(false);
+
+            // Clear file input so the same file can be uploaded again if needed
+            event.target.value = "";
+
+        } catch (error) {
+            console.error("Unexpected error uploading image:", error);
+        }
+    };
+
 
     // function to handle soft delete of a message
     // This function will be called when the user clicks the "Delete" button
@@ -316,7 +376,16 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                                         : "bg-white text-gray-900 self-start rounded-bl-none shadow-[0_6px_12px_rgba(0,0,0,0.1)] dark:bg-gray-800 dark:text-white dark:shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
                                         }`}
                                 >
-                                    {msg.content}
+                                    {msg.image_url ? (
+                                        <img
+                                            src={msg.image_url}
+                                            alt="Sent image"
+                                            className="max-w-full max-h-40 rounded- object-contain"
+                                            loading="lazy"
+                                        />
+                                    ) : (
+                                        msg.content
+                                    )}
                                     {isSentByCurrentUser && (
                                         <div
                                             className="absolute bottom-1 right-2 cursor-pointer"
@@ -363,26 +432,48 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                     <div className="absolute bottom-full mb-4 left-0 z-50">
                         <EmojiPicker
                             onEmojiClick={handleEmojiSelect}
-                            theme={document.documentElement.classList.contains("dark") ? "dark" as Theme : "light" as Theme}
-
+                            theme={
+                                document.documentElement.classList.contains("dark")
+                                    ? ("dark" as Theme)
+                                    : ("light" as Theme)
+                            }
                         />
                     </div>
                 )}
 
                 {/* Input + Send */}
-                <div className="relative flex-1">
+                <div className="relative flex-1 flex items-center">
                     {/* Emoji Button */}
                     <button
-                        onClick={() => setShowEmojiPicker(prev => !prev)}
-                        className="absolute text-2xl top-1/2 -translate-y-1/2 left-3  hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+                        onClick={() => setShowEmojiPicker((prev) => !prev)}
+                        className="absolute text-2xl top-1/2 -translate-y-1/2 left-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+                        type="button"
                     >
                         <SmilePlus />
                     </button>
+
+                    {/* Image Upload Button */}
+                    <label
+                        htmlFor="image-upload"
+                        className="absolute top-1/2 -translate-y-1/2 left-12 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded p-1"
+                        title="Send Image"
+                    >
+                        <ImageIcon />
+                    </label>
+                    <input
+                        id="image-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                    />
+
+                    {/* Text Input */}
                     <input
                         type="text"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        className="w-full py-3 pr-20 pl-14 rounded ring-1 ring-blue-500 focus:ring-2 focus:outline-none focus:ring-blue-500 dark:ring-blue-800 dark:focus:ring-blue-800 dark:bg-gray-900 dark:text-white text-lg "
+                        className="w-full py-3 pr-20 pl-24 rounded ring-1 ring-blue-500 focus:ring-2 focus:outline-none focus:ring-blue-500 dark:ring-blue-800 dark:focus:ring-blue-800 dark:bg-gray-900 dark:text-white text-lg"
                         placeholder="Type a message..."
                         onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
@@ -391,15 +482,19 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                             }
                         }}
                     />
+
+                    {/* Send Button */}
                     <button
                         onClick={handleSendMessage}
                         disabled={!message.trim()}
                         className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800 disabled:text-blue-300 hover:cursor-pointer"
+                        type="button"
                     >
                         <SendHorizontal size={24} className="mr-2" />
                     </button>
                 </div>
             </div>
+
 
         </motion.div>
     );

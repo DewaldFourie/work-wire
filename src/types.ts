@@ -20,6 +20,7 @@ export type Message = {
     deleted: boolean;
     is_group_message: boolean;
     group_id?: string; 
+    image_url?: string;
 };
 
 export type Group = {
