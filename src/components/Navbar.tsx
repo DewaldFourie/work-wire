@@ -34,7 +34,7 @@ export default function Navbar() {
                             <Contact className="w-5 h-5" />
                             Profile
                         </button>
-                        <button className="btn btn-icon-gap">
+                        <button onClick={() => navigate("/about")} className="btn btn-icon-gap">
                             <BookText className="w-5 h-5" />
                             About
                         </button>

@@ -6,6 +6,7 @@ import MainLayout from "./layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Profile from "./pages/Profile";
 import Groups from "./pages/Groups";
+import About from "./pages/About";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="groups" element={<Groups />} />
+          <Route path="about" element={<About />} />
         </Route>
       </Routes>
     </BrowserRouter>
