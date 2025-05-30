@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import type { UserProfile } from "../types";
 import { supabase } from "../supabase/client";
 import type { Message } from "../types";
-import { CheckCheck, PackageOpen, ChevronDown, Trash2, SendHorizontal, SmilePlus, X, ImageIcon } from "lucide-react";
+import { CheckCheck, PackageOpen, ChevronDown, Trash2, SendHorizontal, SmilePlus, X, ImageIcon, Download } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRef } from "react";
 import EmojiPicker from 'emoji-picker-react';
@@ -497,8 +497,6 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                         </button>
                     </div>
                 </div>
-
-
             </motion.div>
             {selectedImageUrl && (
                 <motion.div
@@ -508,6 +506,30 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm"
                     onClick={() => setSelectedImageUrl(null)}
                 >
+                    {/* Download button */}
+                    <button
+                        onClick={async (e) => {
+                            e.stopPropagation();
+
+                            try {
+                                const response = await fetch(selectedImageUrl);
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement("a");
+                                link.href = url;
+                                link.download = selectedImageUrl.split("/").pop() || "image.jpg";
+                                link.click();
+                                window.URL.revokeObjectURL(url); // clean up
+                            } catch (err) {
+                                console.error("Failed to download image", err);
+                            }
+                        }}
+                        className="absolute top-6 right-6 text-white bg-black bg-opacity-50 hover:bg-opacity-80 p-2 rounded-full shadow-lg"
+                    >
+                        <Download className="w-5 h-5" />
+                    </button>
+
+                    {/* Fullscreen image */}
                     <motion.img
                         src={selectedImageUrl}
                         alt="Full size"
@@ -516,11 +538,10 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                         exit={{ scale: 0.8, opacity: 0 }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg"
-                        onClick={(e) => e.stopPropagation()} // Prevent closing modal when clicking the image
+                        onClick={(e) => e.stopPropagation()}
                     />
                 </motion.div>
             )}
-
         </>
     );
 };
