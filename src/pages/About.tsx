@@ -19,16 +19,17 @@ export default function About() {
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="w-[80%] h-[800px] mx-auto mt-6 rounded-xl overflow-hidden shadow-xl bg-white dark:bg-gray-800 flex flex-col"
+                className="w-[80%] h-[800px] mx-auto mt-14 rounded-xl overflow-hidden shadow-xl bg-white dark:bg-gray-900 flex flex-col"
             >
                 <div className="relative flex-1 p-12 flex flex-col items-center justify-center gap-8 text-center">
                     <motion.h1
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.2, duration: 0.6 }}
-                        className="text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-700 dark:from-blue-400 dark:to-purple-500"
+                        className="text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-900 dark:from-white dark:to-white"
                     >
-                        About WorkWire
+                        About
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-blue-600 dark:from-blue-500 dark:to-blue-500"> WorkWire</span>
                     </motion.h1>
 
                     <motion.p
