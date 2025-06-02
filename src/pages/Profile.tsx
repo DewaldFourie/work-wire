@@ -283,9 +283,9 @@ export default function Profile() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="w-[80%] h-[800px] mx-auto mt-6 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 flex flex-col"
+                className="w-[80%] h-[800px] mx-auto mt-14 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-900 flex flex-col"
             >
-                <div className="w-[100%] h-[800px] mx-auto mt-6 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 flex flex-col">
+                <div className="w-[100%] h-[800px] mx-auto rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-900 flex flex-col">
                     {/* Cover Image Section - 1/3 */}
                     <div className="relative flex-[1.5] h-1/3 min-h-[240px] max-h-[300px] bg-gray-300 dark:bg-gray-700 overflow-visible">
                         {/* Cover Image */}
