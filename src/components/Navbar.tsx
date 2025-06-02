@@ -38,7 +38,7 @@ export default function Navbar() {
                             <BookText className="w-5 h-5" />
                             About
                         </button>
-                        <button className="btn btn-icon-gap">
+                        <button onClick={() => navigate("/settings")} className="btn btn-icon-gap">
                             <Settings className="w-5 h-5" />
                             Settings
                         </button>

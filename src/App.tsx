@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Profile from "./pages/Profile";
 import Groups from "./pages/Groups";
 import About from "./pages/About";
+import Settings from "./pages/Settings";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="groups" element={<Groups />} />
           <Route path="about" element={<About />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>
