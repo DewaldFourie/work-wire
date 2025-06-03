@@ -1,6 +1,6 @@
 import { Volume2, VolumeX } from "lucide-react";
 import { useTheme } from "../contexts/use-theme.ts";
-import { useSound } from "../contexts/use-sound.ts"; 
+import { useSound } from "../contexts/use-sound.ts";
 
 type SoundToggleProps = {
     width?: number;
@@ -13,15 +13,16 @@ export default function SoundToggle({
     height = 40,
     onToggle,
 }: SoundToggleProps) {
-    const { isMuted, toggleSound } = useSound(); 
+    const { isMuted, toggleSound } = useSound();
     const { theme } = useTheme();
 
     const knobSize = height * 0.8;
-    const knobTranslate = width - knobSize - 8; 
+    const knobTranslate = width - knobSize - 8;
 
     const handleToggle = () => {
-        toggleSound();
-        if (onToggle) onToggle(!isMuted);
+        const nextMuted = !isMuted;
+        toggleSound(); 
+        if (onToggle) onToggle(nextMuted);
     };
 
     return (
@@ -32,23 +33,21 @@ export default function SoundToggle({
             style={{ width, height }}
         >
             <Volume2
-                className={`transition-all duration-300 ${
-                    isMuted
+                className={`transition-all duration-300 ${isMuted
                         ? theme === "dark"
                             ? "opacity-50 text-gray-100"
                             : "opacity-50 grayscale"
                         : "opacity-100 text-green-500"
-                }`}
+                    }`}
                 style={{ width: height * 0.5, height: height * 0.5 }}
             />
             <VolumeX
-                className={`transition-all duration-300 ${
-                    isMuted
+                className={`transition-all duration-300 ${isMuted
                         ? "opacity-100 text-red-500"
                         : theme === "dark"
-                        ? "opacity-50 text-gray-100"
-                        : "opacity-50 grayscale"
-                }`}
+                            ? "opacity-50 text-gray-100"
+                            : "opacity-50 grayscale"
+                    }`}
                 style={{ width: height * 0.5, height: height * 0.5 }}
             />
             <div
