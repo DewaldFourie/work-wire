@@ -6,12 +6,17 @@ import { AuthContext } from "./auth-context";
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true); 
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => {
+        const loadSession = async () => {
+            const { data } = await supabase.auth.getSession();
             setSession(data.session);
             setUser(data.session?.user ?? null);
-        });
+            setLoading(false); 
+        };
+
+        loadSession();
 
         const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
@@ -34,7 +39,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         channel
             .on("presence", { event: "sync" }, () => {
-                // this could log the state or be used elsewhere
                 const presenceState = channel.presenceState();
                 console.log("Presence sync:", presenceState);
             })
@@ -50,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, [user]);
 
     return (
-        <AuthContext.Provider value={{ user, session }}>
+        <AuthContext.Provider value={{ user, session, loading }}>
             {children}
         </AuthContext.Provider>
     );
