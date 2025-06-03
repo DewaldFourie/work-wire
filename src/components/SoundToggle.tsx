@@ -1,31 +1,28 @@
 import { Volume2, VolumeX } from "lucide-react";
-import { useState } from "react";
 import { useTheme } from "../contexts/use-theme.ts";
+import { useSound } from "../contexts/use-sound.ts"; 
 
 type SoundToggleProps = {
     width?: number;
     height?: number;
-    initialMuted?: boolean;
     onToggle?: (muted: boolean) => void;
 };
 
 export default function SoundToggle({
     width = 80,
     height = 40,
-    initialMuted = false,
     onToggle,
 }: SoundToggleProps) {
-    const [isMuted, setIsMuted] = useState(initialMuted);
+    const { isMuted, toggleSound } = useSound(); 
     const { theme } = useTheme();
 
-    const handleToggle = () => {
-        const newState = !isMuted;
-        setIsMuted(newState);
-        if (onToggle) onToggle(newState);
-    };
-
     const knobSize = height * 0.8;
-    const knobTranslate = width - knobSize - 8; // padding compensation
+    const knobTranslate = width - knobSize - 8; 
+
+    const handleToggle = () => {
+        toggleSound();
+        if (onToggle) onToggle(!isMuted);
+    };
 
     return (
         <button
@@ -35,21 +32,23 @@ export default function SoundToggle({
             style={{ width, height }}
         >
             <Volume2
-                className={`transition-all duration-300 ${isMuted
+                className={`transition-all duration-300 ${
+                    isMuted
                         ? theme === "dark"
                             ? "opacity-50 text-gray-100"
                             : "opacity-50 grayscale"
                         : "opacity-100 text-green-500"
-                    }`}
+                }`}
                 style={{ width: height * 0.5, height: height * 0.5 }}
             />
             <VolumeX
-                className={`transition-all duration-300 ${isMuted
+                className={`transition-all duration-300 ${
+                    isMuted
                         ? "opacity-100 text-red-500"
                         : theme === "dark"
-                            ? "opacity-50 text-gray-100"
-                            : "opacity-50 grayscale"
-                    }`}
+                        ? "opacity-50 text-gray-100"
+                        : "opacity-50 grayscale"
+                }`}
                 style={{ width: height * 0.5, height: height * 0.5 }}
             />
             <div
