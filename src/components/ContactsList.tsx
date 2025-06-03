@@ -22,6 +22,7 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
     const [contacts, setContacts] = useState<ContactWithLastMessage[]>([]);
     const [loading, setLoading] = useState(true);
     const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
+    const [searchTerm, setSearchTerm] = useState("");
 
     // Fetch contacts and their last message timestamps
     useEffect(() => {
@@ -168,7 +169,7 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
 
     return (
         <motion.div
-            className="p-4 space-y-2 min-h-full"
+            className="p-4 space-y-2 min-h-full min-w-[100px]"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
@@ -178,6 +179,13 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                 Contacts
             </h2>
             <hr className="border-t border-gray-300 dark:border-gray-700 mb-4" />
+            <input
+                type="text"
+                placeholder="Search Contacts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-[97%] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+            />
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center gap-3 mt-36 text-gray-700 dark:text-gray-300">
@@ -188,73 +196,77 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                 <div className="text-gray-500 dark:text-gray-400">No other users found.</div>
             ) : (
                 <ul className="space-y-2 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
-                    {contacts.map((contact) => {
-                        const isActive = contact.id === selectedContactId;
-                        const isSentByCurrentUser = contact.last_message_sender_id === currentUserId;
-                        const messagePrefix = isSentByCurrentUser ? "You: " : "";
-                        const isOnline = onlineUserIds.includes(contact.id);
+                    {contacts
+                        .filter(contact =>
+                            contact.username.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                        .map((contact) => {
+                            const isActive = contact.id === selectedContactId;
+                            const isSentByCurrentUser = contact.last_message_sender_id === currentUserId;
+                            const messagePrefix = isSentByCurrentUser ? "You: " : "";
+                            const isOnline = onlineUserIds.includes(contact.id);
 
-                        return (
-                            <motion.li
-                                key={contact.id}
-                                initial={{ opacity: 0, y: 0 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2 }}
-                                onClick={() => handleSelect(contact)}
-                                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition ${isActive
-                                    ? "bg-blue-100 dark:bg-blue-900 border-l-2 border-blue-500"
-                                    : "bg-gray-200 dark:bg-gray-900"
-                                    }`}
-                            >
-                                <div className="relative w-10 h-10">
-                                    <img
-                                        src={contact.profile_image_url || "/default-image.jpg"}
-                                        alt={`${contact.username}'s profile`}
-                                        className="w-full h-full object-cover rounded-full "
-                                    />
-                                    <span
-                                        className={`absolute inset-0 rounded-full ring-2 ring-offset-2 shadow-md 
+                            return (
+                                <motion.li
+                                    key={contact.id}
+                                    initial={{ opacity: 0, y: 0 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    onClick={() => handleSelect(contact)}
+                                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition ${isActive
+                                        ? "bg-blue-100 dark:bg-blue-900 border-l-2 border-blue-500"
+                                        : "bg-gray-200 dark:bg-gray-900"
+                                        }`}
+                                >
+                                    <div className="relative w-10 h-10">
+                                        <img
+                                            src={contact.profile_image_url || "/default-image.jpg"}
+                                            alt={`${contact.username}'s profile`}
+                                            className="w-full h-full object-cover rounded-full "
+                                        />
+                                        <span
+                                            className={`absolute inset-0 rounded-full ring-2 ring-offset-2 shadow-md 
                                             ${isOnline
-                                                ? "ring-green-500 ring-offset-white dark:ring-offset-gray-900"
-                                                : "ring-gray-300 dark:ring-gray-500 ring-offset-white dark:ring-offset-gray-900"
-                                            }`}
-                                    ></span>
-                                </div>
-
-                                <div className="flex-1 min-w-0">
-                                    {/* Top row: username + time */}
-                                    <div className="flex justify-between items-center">
-                                        <div className="font-medium text-gray-900 dark:text-white truncate w-40">
-                                            {contact.username}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
-                                            {contact.last_message_time
-                                                ? formatMessageDate(contact.last_message_time)
-                                                : ""}
-                                        </div>
+                                                    ? "ring-green-500 ring-offset-white dark:ring-offset-gray-900"
+                                                    : "ring-gray-300 dark:ring-gray-500 ring-offset-white dark:ring-offset-gray-900"
+                                                }`}
+                                        ></span>
                                     </div>
 
-                                    {/* Bottom row: message + check icon */}
-                                    <div className="flex justify-between items-center mt-1">
-                                        <div className="text-sm text-gray-600 dark:text-gray-400 truncate w-40">
-                                            {contact.last_message_image_url ? (
-                                                <span className="italic text-xs text-gray-500 dark:text-gray-400">Image</span>
-                                            ) : contact.last_message_text ? (
-                                                `${messagePrefix}${contact.last_message_text}`
-                                            ) : (
-                                                <span className="italic text-xs text-gray-500 dark:text-gray-400">
-                                                    Start a new conversation...
-                                                </span>
+                                    <div className="flex-1 min-w-0">
+                                        {/* Top row: username + time */}
+                                        <div className="flex justify-between items-center">
+                                            <div className="font-medium text-gray-900 dark:text-white truncate w-40">
+                                                {contact.username}
+                                            </div>
+                                            <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
+                                                {contact.last_message_time
+                                                    ? formatMessageDate(contact.last_message_time)
+                                                    : ""}
+                                            </div>
+                                        </div>
+
+                                        {/* Bottom row: message + check icon */}
+                                        <div className="flex justify-between items-center mt-1">
+                                            <div className="text-sm text-gray-600 dark:text-gray-400 truncate w-40">
+                                                {contact.last_message_image_url ? (
+                                                    <span className="italic text-xs text-gray-500 dark:text-gray-400">Image</span>
+                                                ) : contact.last_message_text ? (
+                                                    `${messagePrefix}${contact.last_message_text}`
+                                                ) : (
+                                                    <span className="italic text-xs text-gray-500 dark:text-gray-400">
+                                                        Start a new conversation...
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {isSentByCurrentUser && (
+                                                <CheckCheck className="w-4 h-4 text-blue-500 flex-shrink-0 ml-2" />
                                             )}
                                         </div>
-                                        {isSentByCurrentUser && (
-                                            <CheckCheck className="w-4 h-4 text-blue-500 flex-shrink-0 ml-2" />
-                                        )}
                                     </div>
-                                </div>
-                            </motion.li>
-                        );
-                    })}
+                                </motion.li>
+                            );
+                        })}
                 </ul>
             )}
         </motion.div>

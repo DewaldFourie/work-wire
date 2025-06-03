@@ -1,9 +1,13 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
+import { useTheme } from "../contexts/use-theme";
+import { useSound } from "../contexts/use-sound";
 
 export default function Settings() {
     const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
+    const { isMuted, toggleSound } = useSound();
 
     return (
         <>
@@ -48,8 +52,20 @@ export default function Settings() {
                         transition={{ delay: 0.6, duration: 0.6 }}
                         className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-10 w-full max-w-4xl"
                     >
-                        <SettingCard title="Dark Mode" description="Toggle between light and dark themes for your workspace." />
-                        <SettingCard title="Notifications" description="Enable or disable sound and desktop alerts." />
+                        <SettingCard
+                            title={theme === "dark" ? "Dark Mode" : "Light Mode"}
+                            description={`Currently using ${theme} mode. Click to switch.`}
+                            onClick={toggleTheme}
+                        />
+                        <SettingCard
+                            title={isMuted ? "Notifications Off" : "Notifications On"}
+                            description={
+                                isMuted
+                                    ? "Sound is currently muted. Click to enable notifications."
+                                    : "Sound is enabled. Click to mute notifications."
+                            }
+                            onClick={toggleSound}
+                        />
                         <SettingCard title="Privacy" description="Manage who can see your profile or contact you." />
                         <SettingCard title="Account" description="Change your email, password, or delete your account." />
                     </motion.div>
@@ -59,10 +75,19 @@ export default function Settings() {
     );
 }
 
-function SettingCard({ title, description }: { title: string; description: string }) {
+function SettingCard({
+    title,
+    description,
+    onClick,
+}: {
+    title: string;
+    description: string;
+    onClick?: () => void;
+}) {
     return (
         <motion.div
             whileHover={{ scale: 1.05 }}
+            onClick={onClick}
             className="rounded-xl bg-gray-100 dark:bg-gray-700 p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
         >
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
