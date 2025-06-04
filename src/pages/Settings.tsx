@@ -3,11 +3,55 @@ import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 import { useTheme } from "../contexts/use-theme";
 import { useSound } from "../contexts/use-sound";
+import { useEffect, useState } from "react";
+import { supabase } from "../supabase/client";
+import { useAuth } from "../contexts/auth-context";
+
 
 export default function Settings() {
+    const { user } = useAuth();
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const { isMuted, toggleSound } = useSound();
+    const [isPublic, setIsPublic] = useState<boolean | null>(null);
+
+
+    useEffect(() => {
+        const fetchPrivacy = async () => {
+            if (!user?.id) return;
+
+            const { data, error } = await supabase
+                .from("users")
+                .select("public")
+                .eq("id", user.id)
+                .single();
+
+            if (error) {
+                console.error("Error fetching privacy status:", error.message);
+                return;
+            }
+
+            setIsPublic(data.public);
+        };
+
+        fetchPrivacy();
+    }, [user]);
+
+    const togglePrivacy = async () => {
+        if (!user?.id || isPublic === null) return;
+
+        const { error } = await supabase
+            .from("users")
+            .update({ public: !isPublic })
+            .eq("id", user.id);
+
+        if (error) {
+            console.error("Failed to update privacy setting:", error.message);
+            return;
+        }
+
+        setIsPublic((prev) => !prev);
+    };
 
     return (
         <>
@@ -66,8 +110,30 @@ export default function Settings() {
                             }
                             onClick={toggleSound}
                         />
-                        <SettingCard title="Privacy" description="Manage who can see your profile or contact you." />
-                        <SettingCard title="Account" description="Change your email, password, or delete your account." />
+                        <SettingCard
+                            title={
+                                isPublic === null
+                                    ? "Loading Privacy..."
+                                    : isPublic
+                                        ? "Profile is Public"
+                                        : "Profile is Private"
+                            }
+                            description={
+                                isPublic === null
+                                    ? "Fetching your privacy setting..."
+                                    : isPublic
+                                        ? "Your profile is visible to others. Click to hide it."
+                                        : "Your profile is hidden. Click to make it public."
+                            }
+                            onClick={togglePrivacy}
+                        />
+
+                        <SettingCard
+                            title="Account"
+                            description="Your account details are managed by the system administrator. Click to contact them for support."
+                            onClick={() => window.open("https://portfolio-website-pied-five.vercel.app/", "_blank")}
+                        />
+
                     </motion.div>
                 </div>
             </motion.div>

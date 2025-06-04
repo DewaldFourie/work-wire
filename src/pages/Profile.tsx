@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/auth-context";
 import { supabase } from "../supabase/client";
-import { Pencil, Camera, X } from "lucide-react";
+import { Pencil, Camera, X, Lock } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import { motion } from "framer-motion";
 import Modal from "../components/Modal";
@@ -19,6 +19,7 @@ type UserProfile = {
     profession: string | null;
     skills: string | null;
     about: string | null;
+    public: boolean;
 };
 
 
@@ -43,6 +44,8 @@ export default function Profile() {
 
     // Check if the profile belongs to the logged-in user
     const isOwnProfile = user && user.id === profile?.id;
+    const isPrivateAndNotOwn = profile && !profile.public && !isOwnProfile;
+
 
     const navigate = useNavigate();
 
@@ -270,6 +273,8 @@ export default function Profile() {
         );
     }
 
+
+
     return (
         <>
             <button
@@ -279,142 +284,152 @@ export default function Profile() {
             >
                 <X className="h-5 w-5 text-gray-800 dark:text-gray-200" />
             </button>
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="w-[80%] h-[800px] mx-auto mt-14 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-900 flex flex-col"
-            >
-                <div className="w-[100%] h-[800px] mx-auto rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-900 flex flex-col">
-                    {/* Cover Image Section - 1/3 */}
-                    <div className="relative flex-[1.5] h-1/3 min-h-[240px] max-h-[300px] bg-gray-300 dark:bg-gray-700 overflow-visible">
-                        {/* Cover Image */}
-                        {profile.cover_image_url && (
-                            <img
-                                src={profile.cover_image_url}
-                                alt="Cover"
-                                className="object-cover w-full h-full"
-                            />
-                        )}
-
-                        {/* Edit Cover Button */}
-                        {isOwnProfile && (
-                            <button
-                                className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                onClick={() => setShowCoverImageModal(true)}
-                            >
-                                <Camera size={18} />
-                                Edit Cover
-                            </button>
-                        )}
-
-                        {/* Profile Picture */}
-                        <div className="absolute bottom-[-75px] left-10 h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-white p-1 shadow-md">
-                            <img
-                                src={profile.profile_image_url || "/default-image.jpg"}
-                                alt="Profile"
-                                className="h-full w-full rounded-full object-cover scale-110"
-                            />
-                            {isOwnProfile && (
-                                <button
-                                    className="absolute right-2 top-[90px] sm:top-[120px] flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                    onClick={() => setShowProfileImageModal(true)}
-                                    aria-label="Edit profile picture"
-                                >
-                                    <Camera size={18} className="text-gray-800 dark:text-gray-200" />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Bio Section - 2/3 */}
-                    <div className="flex-[2.5] p-10 overflow-y-auto">
-                        <div className="flex items-start gap-2">
-                            {/* Profile image spacer */}
-                            <div className="w-[12rem] shrink-0" />
-                            {/* User details */}
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                    <h2 className="text-4xl mr-3 font-bold text-gray-900 dark:text-white">{profile.username}</h2>
-                                    {profile.github_url && (
-                                        <a
-                                            href={profile.github_url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
-                                            title="GitHub Profile"
-                                        >
-                                            <FaGithub className="w-6 h-6 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white" />
-                                        </a>
-                                    )}
-                                </div>
-                                <p className="text-sm mt-2 text-gray-500 dark:text-gray-400">
-                                    Profession:{" "}
-                                    <span className="text-base ml-4 text-gray-700 dark:text-gray-300">
-                                        {profile.profession || "No profession listed"}
-                                    </span>
-                                </p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Location:{" "}
-                                    <span className="text-base ml-7 text-gray-700 dark:text-gray-300">
-                                        {profile.location || "No location provided"}
-                                    </span>
-                                </p>
-                            </div>
-                            {/* Edit button */}
-                            {isOwnProfile && (
-                                <button
-                                    className="bg-gray-100 dark:bg-gray-700 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
-                                    onClick={() => setShowEditDetailsModal(true)}
-                                >
-                                    <Pencil size={18} />
-                                </button>
-                            )}
-                        </div>
-                        <hr className="my-6 border-gray-200 dark:border-gray-700" />
-                        <div className="mt-6 relative ">
-                            {/* Edit Button */}
-                            {isOwnProfile && (
-                                <button
-                                    className="absolute top-0 right-0 bg-gray-100 dark:bg-gray-700 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
-                                    onClick={() => setShowEditSkillsAboutModal(true)}
-                                    aria-label="Edit Profile Details"
-                                >
-                                    <Pencil size={18} />
-                                </button>
-                            )}
-
-                            {/* Skills Section */}
-                            {profile.skills && profile.skills.trim().length > 0 && (
-                                <div className="mb-6">
-                                    <h4 className="font-semibold text-xl text-gray-800 dark:text-white">Skills</h4>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        {profile.skills.split(",").map((skill, i) => (
-                                            <span
-                                                key={i}
-                                                className="bg-gray-200 dark:bg-gray-700 text-sm px-2 py-1 rounded"
-                                            >
-                                                {skill.trim()}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* About Me Section */}
-                            <div>
-                                <h4 className="font-semibold text-3xl text-gray-800 dark:text-white mb-2">
-                                    About Me
-                                </h4>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                    {profile.about || "No bio provided"}
-                                </p>
-                            </div>
-                        </div>
-
+            {isPrivateAndNotOwn ? (
+                <div className="flex items-center justify-center h-[800px] bg-white dark:bg-gray-900 rounded-xl shadow-lg w-[80%] mx-auto mt-14">
+                    <div className="text-center">
+                        <Lock className="mx-auto mb-4 text-gray-500 dark:text-gray-400" size={40} />
+                        <h2 className="text-xl font-semibold text-gray-800 dark:text-white">This profile is private.</h2>
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">You don't have permission to view this profile.</p>
                     </div>
                 </div>
-            </motion.div>
+            ) : (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className="w-[80%] h-[800px] mx-auto mt-14 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-900 flex flex-col"
+                >
+                    <div className="w-[100%] h-[800px] mx-auto rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-900 flex flex-col">
+                        {/* Cover Image Section - 1/3 */}
+                        <div className="relative flex-[1.5] h-1/3 min-h-[240px] max-h-[300px] bg-gray-300 dark:bg-gray-700 overflow-visible">
+                            {/* Cover Image */}
+                            {profile.cover_image_url && (
+                                <img
+                                    src={profile.cover_image_url}
+                                    alt="Cover"
+                                    className="object-cover w-full h-full"
+                                />
+                            )}
+
+                            {/* Edit Cover Button */}
+                            {isOwnProfile && (
+                                <button
+                                    className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                    onClick={() => setShowCoverImageModal(true)}
+                                >
+                                    <Camera size={18} />
+                                    Edit Cover
+                                </button>
+                            )}
+
+                            {/* Profile Picture */}
+                            <div className="absolute bottom-[-75px] left-10 h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-white p-1 shadow-md">
+                                <img
+                                    src={profile.profile_image_url || "/default-image.jpg"}
+                                    alt="Profile"
+                                    className="h-full w-full rounded-full object-cover scale-110"
+                                />
+                                {isOwnProfile && (
+                                    <button
+                                        className="absolute right-2 top-[90px] sm:top-[120px] flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                        onClick={() => setShowProfileImageModal(true)}
+                                        aria-label="Edit profile picture"
+                                    >
+                                        <Camera size={18} className="text-gray-800 dark:text-gray-200" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Bio Section - 2/3 */}
+                        <div className="flex-[2.5] p-10 overflow-y-auto">
+                            <div className="flex items-start gap-2">
+                                {/* Profile image spacer */}
+                                <div className="w-[12rem] shrink-0" />
+                                {/* User details */}
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <h2 className="text-4xl mr-3 font-bold text-gray-900 dark:text-white">{profile.username}</h2>
+                                        {profile.github_url && (
+                                            <a
+                                                href={profile.github_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+                                                title="GitHub Profile"
+                                            >
+                                                <FaGithub className="w-6 h-6 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white" />
+                                            </a>
+                                        )}
+                                    </div>
+                                    <p className="text-sm mt-2 text-gray-500 dark:text-gray-400">
+                                        Profession:{" "}
+                                        <span className="text-base ml-4 text-gray-700 dark:text-gray-300">
+                                            {profile.profession || "No profession listed"}
+                                        </span>
+                                    </p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        Location:{" "}
+                                        <span className="text-base ml-7 text-gray-700 dark:text-gray-300">
+                                            {profile.location || "No location provided"}
+                                        </span>
+                                    </p>
+                                </div>
+                                {/* Edit button */}
+                                {isOwnProfile && (
+                                    <button
+                                        className="bg-gray-100 dark:bg-gray-700 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
+                                        onClick={() => setShowEditDetailsModal(true)}
+                                    >
+                                        <Pencil size={18} />
+                                    </button>
+                                )}
+                            </div>
+                            <hr className="my-6 border-gray-200 dark:border-gray-700" />
+                            <div className="mt-6 relative ">
+                                {/* Edit Button */}
+                                {isOwnProfile && (
+                                    <button
+                                        className="absolute top-0 right-0 bg-gray-100 dark:bg-gray-700 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
+                                        onClick={() => setShowEditSkillsAboutModal(true)}
+                                        aria-label="Edit Profile Details"
+                                    >
+                                        <Pencil size={18} />
+                                    </button>
+                                )}
+
+                                {/* Skills Section */}
+                                {profile.skills && profile.skills.trim().length > 0 && (
+                                    <div className="mb-6">
+                                        <h4 className="font-semibold text-xl text-gray-800 dark:text-white">Skills</h4>
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {profile.skills.split(",").map((skill, i) => (
+                                                <span
+                                                    key={i}
+                                                    className="bg-gray-200 dark:bg-gray-700 text-sm px-2 py-1 rounded"
+                                                >
+                                                    {skill.trim()}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* About Me Section */}
+                                <div>
+                                    <h4 className="font-semibold text-3xl text-gray-800 dark:text-white mb-2">
+                                        About Me
+                                    </h4>
+                                    <p className="text-gray-700 dark:text-gray-300">
+                                        {profile.about || "No bio provided"}
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </motion.div>
+            )}
             {/* Profile Picture edit Modal */}
             <Modal isOpen={showProfileImageModal} onClose={() => setShowProfileImageModal(false)} maxWidthClass="max-w-md">
                 <div className="max-w-md w-full h-96 bg-white dark:bg-gray-800 p-6 rounded-xl mx-auto flex flex-col">

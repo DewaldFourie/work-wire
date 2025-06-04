@@ -51,6 +51,7 @@ export async function signUpWithEmail({
             id,
             email,
             username,
+            public: true
         },
     ]);
 
