@@ -3,7 +3,7 @@ import { signOut } from "../lib/auth";
 import { useNavigate, useLocation } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import SoundToggle from "./SoundToggle";
-import { House, Contact, BookText, Settings, LogOut, Users } from "lucide-react";
+import { House, Contact, BookText, Settings, LogOut, Users, ExternalLink } from "lucide-react";
 
 export default function Navbar() {
     const { user } = useAuth();
@@ -83,6 +83,17 @@ export default function Navbar() {
                     >
                         <BookText className="w-5 h-5" />
                         About
+                    </button>
+                    <button
+                        onClick={() => navigate("/invite")}
+                        className={`${baseButtonClasses} ${
+                            isActive("/invite")
+                                ? "bg-blue-50 dark:bg-blue-900 border-blue-500 text-blue-600 dark:text-blue-300"
+                                : "bg-blue-600 hover:bg-blue-700 border-transparent text-white"
+                        }`}
+                    >
+                        <ExternalLink className="w-5 h-5" />
+                        Share
                     </button>
                     
                 </nav>

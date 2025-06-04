@@ -8,6 +8,7 @@ import Profile from "./pages/Profile";
 import Groups from "./pages/Groups";
 import About from "./pages/About";
 import Settings from "./pages/Settings";
+import Invite from "./pages/Invite";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
           <Route path="groups" element={<Groups />} />
           <Route path="about" element={<About />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="invite" element={<Invite />} />
         </Route>
       </Routes>
     </BrowserRouter>
