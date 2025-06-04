@@ -73,7 +73,7 @@ function FeatureCard({ title, description }: { title: string; description: strin
     return (
         <motion.div
             whileHover={{ scale: 1.05 }}
-            className="rounded-xl bg-gray-100 dark:bg-gray-700 p-6 shadow-md hover:shadow-lg transition-shadow"
+            className="rounded-xl bg-gray-100 dark:bg-gray-700 p-6 shadow-md hover:shadow-xl transition-shadow"
         >
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
             <p className="text-gray-600 dark:text-gray-300 text-sm">{description}</p>

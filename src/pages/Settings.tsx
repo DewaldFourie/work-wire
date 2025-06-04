@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { X } from "lucide-react";
+import { X, Sun, Moon } from "lucide-react";
 import { useTheme } from "../contexts/use-theme";
 import { useSound } from "../contexts/use-sound";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "../supabase/client";
 import { useAuth } from "../contexts/auth-context";
 
@@ -97,12 +97,29 @@ export default function Settings() {
                         className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-10 w-full max-w-4xl"
                     >
                         <SettingCard
-                            title={theme === "dark" ? "Dark Mode" : "Light Mode"}
+                            title={
+                                theme === "dark" ? (
+                                    <span className="inline-flex items-center gap-2">
+                                        Dark Mode <Moon className="w-5 h-5 text-blue-500" />
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-2">
+                                        Light Mode <Sun className="w-5 h-5 text-yellow-500" />
+                                    </span>
+                                )
+                            }
                             description={`Currently using ${theme} mode. Click to switch.`}
                             onClick={toggleTheme}
                         />
                         <SettingCard
-                            title={isMuted ? "Notifications Off" : "Notifications On"}
+                            title={
+                                <>
+                                    Notifications{" "}
+                                    <span className={isMuted ? "text-red-600" : "text-green-600"}>
+                                        {isMuted ? "Off" : "On"}
+                                    </span>
+                                </>
+                            }
                             description={
                                 isMuted
                                     ? "Sound is currently muted. Click to enable notifications."
@@ -112,11 +129,16 @@ export default function Settings() {
                         />
                         <SettingCard
                             title={
-                                isPublic === null
-                                    ? "Loading Privacy..."
-                                    : isPublic
-                                        ? "Profile is Public"
-                                        : "Profile is Private"
+                                isPublic === null ? (
+                                    "Loading Privacy..."
+                                ) : (
+                                    <>
+                                        Profile is{" "}
+                                        <span className={isPublic ? "text-green-600" : "text-red-600"}>
+                                            {isPublic ? "Public" : "Private"}
+                                        </span>
+                                    </>
+                                )
                             }
                             description={
                                 isPublic === null
@@ -127,7 +149,6 @@ export default function Settings() {
                             }
                             onClick={togglePrivacy}
                         />
-
                         <SettingCard
                             title="Account"
                             description="Your account details are managed by the system administrator. Click to contact them for support."
@@ -146,15 +167,16 @@ function SettingCard({
     description,
     onClick,
 }: {
-    title: string;
+    title: React.ReactNode;
     description: string;
     onClick?: () => void;
 }) {
     return (
         <motion.div
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.01 }}
             onClick={onClick}
-            className="rounded-xl bg-gray-100 dark:bg-gray-700 p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+            className="transform-gpu rounded-xl bg-gray-100 dark:bg-gray-700 p-6 shadow-md transition-shadow cursor-pointer 
+                border-2 border-transparent hover:shadow-xl hover:border-blue-600"
         >
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
             <p className="text-gray-600 dark:text-gray-300 text-sm">{description}</p>

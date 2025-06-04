@@ -27,7 +27,6 @@ export default function Navbar() {
                     <img src="/WorkWireLogo.webp" alt="logo" height={45} width={45} />
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white">WorkWire</h1>
                 </div>
-
                 {/* Nav Buttons */}
                 <nav className="flex flex-col gap-2 items-center">
                     <button
@@ -41,7 +40,6 @@ export default function Navbar() {
                         <House className="w-5 h-5" />
                         Home
                     </button>
-
                     <button
                         onClick={() => navigate("/groups")}
                         className={`${baseButtonClasses} ${
@@ -53,7 +51,6 @@ export default function Navbar() {
                         <Users className="w-5 h-5" />
                         Groups
                     </button>
-
                     <button
                         onClick={() => user && navigate(`/profile/${user.id}`)}
                         className={`${baseButtonClasses} ${
@@ -65,19 +62,6 @@ export default function Navbar() {
                         <Contact className="w-5 h-5" />
                         Profile
                     </button>
-
-                    <button
-                        onClick={() => navigate("/about")}
-                        className={`${baseButtonClasses} ${
-                            isActive("/about")
-                                ? "bg-blue-50 dark:bg-blue-900 border-blue-500 text-blue-600 dark:text-blue-300"
-                                : "bg-blue-600 hover:bg-blue-700 border-transparent text-white"
-                        }`}
-                    >
-                        <BookText className="w-5 h-5" />
-                        About
-                    </button>
-
                     <button
                         onClick={() => navigate("/settings")}
                         className={`${baseButtonClasses} ${
@@ -89,9 +73,20 @@ export default function Navbar() {
                         <Settings className="w-5 h-5" />
                         Settings
                     </button>
+                    <button
+                        onClick={() => navigate("/about")}
+                        className={`${baseButtonClasses} ${
+                            isActive("/about")
+                                ? "bg-blue-50 dark:bg-blue-900 border-blue-500 text-blue-600 dark:text-blue-300"
+                                : "bg-blue-600 hover:bg-blue-700 border-transparent text-white"
+                        }`}
+                    >
+                        <BookText className="w-5 h-5" />
+                        About
+                    </button>
+                    
                 </nav>
             </div>
-
             {/* Footer Controls */}
             <div className="flex flex-col justify-center items-center mt-4">
                 <div className="w-full flex items-center justify-center gap-14 text-gray-600 dark:text-gray-400">
