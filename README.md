@@ -21,6 +21,7 @@ Insert gif or link to demo
 - Profession, location, GitHub URL
 - Skills list with tag-style display
 - "About me" section
+- Public Access control for full user Privacy
 
 ### Chat Functionality
 
