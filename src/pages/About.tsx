@@ -35,7 +35,7 @@ export default function About() {
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4, duration: 0.6 }}
+                        transition={{ delay: 0.8, duration: 0.6 }}
                         className="text-lg max-w-2xl text-gray-700 dark:text-gray-300"
                     >
                         WorkWire is your team's new digital hub. Designed to bring clarity,
@@ -47,7 +47,7 @@ export default function About() {
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6, duration: 0.6 }}
+                        transition={{ delay: 1.8, duration: 0.6 }}
                         className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-10"
                     >
                         <FeatureCard
