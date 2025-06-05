@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef, startTransition } from "react";
 import { supabase } from "../supabase/client";
 import type { UserProfile } from "../types";
 import { User, CheckCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatMessageDate } from "../utils/date";
+import { useSound } from '../contexts/use-sound';
 
 type Props = {
     currentUserId: string;
@@ -16,6 +17,7 @@ type ContactWithLastMessage = UserProfile & {
     last_message_text: string | null;
     last_message_sender_id: string | null;
     last_message_image_url: string | null;
+    is_unread: boolean;
 };
 
 const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Props) => {
@@ -23,52 +25,95 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
     const [loading, setLoading] = useState(true);
     const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
+    const { isMuted } = useSound();
+    const audio = useMemo(() => new Audio("/sounds/alert.mp3"), []);
+    const readTimers = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
     // Fetch contacts and their last message timestamps
     useEffect(() => {
         const fetchContacts = async () => {
             setLoading(true);
-            const { data, error } = await supabase
+
+            // 1) Fetch all read timestamps for current user
+            const { data: readRows, error: readErr } = await supabase
+                .from("message_reads")
+                .select("contact_id, last_read_at")
+                .eq("user_id", currentUserId);
+
+            if (readErr) {
+                console.error("Error fetching read timestamps:", readErr.message);
+                // proceed—treat missing reads as “unread”
+            }
+
+            // Build a map: contact_id → last_read_at
+            const readMap = new Map<string, string>();
+            readRows?.forEach((row) => {
+                readMap.set(row.contact_id, row.last_read_at);
+            });
+
+            // 2) Fetch all users except current
+            const { data: usersData, error: userErr } = await supabase
                 .from("users")
                 .select("*")
                 .neq("id", currentUserId);
 
-            if (error) {
-                console.error("Error fetching contacts:", error.message);
+            if (userErr) {
+                console.error("Error fetching contacts:", userErr.message);
                 setLoading(false);
                 return;
             }
 
+            // 3) For each contact, fetch their last message and compute unread
             const contactsWithTimestamps: ContactWithLastMessage[] = await Promise.all(
-                (data as UserProfile[]).map(async (contact) => {
-                    const { data: messages, error: msgError } = await supabase
+                (usersData as UserProfile[]).map(async (contact) => {
+                    // Fetch last message between currentUserId and this contact
+                    const { data: messages, error: msgErr } = await supabase
                         .from("messages")
                         .select("created_at, content, sender_id, image_url")
                         .eq("deleted", false)
-                        .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${contact.id}),and(sender_id.eq.${contact.id},receiver_id.eq.${currentUserId})`)
+                        .or(
+                            `and(sender_id.eq.${currentUserId},receiver_id.eq.${contact.id}),` +
+                            `and(sender_id.eq.${contact.id},receiver_id.eq.${currentUserId})`
+                        )
                         .order("created_at", { ascending: false })
                         .limit(1);
 
-                    if (msgError) {
-                        console.error(`Error fetching last message for ${contact.username}:`, msgError.message);
+                    if (msgErr) {
+                        console.error(
+                            `Error fetching last message for ${contact.username}:`,
+                            msgErr.message
+                        );
                     }
 
-                    const lastMessage = messages?.[0];
+                    const lastMessage = messages?.[0] ?? null;
+                    const lastReadAt = readMap.get(contact.id) || null;
+
+                    // Determine unread: only if last message is from contact, and is newer than lastReadAt
+                    const is_unread =
+                        lastMessage &&
+                        lastMessage.sender_id !== currentUserId &&
+                        (!lastReadAt ||
+                            new Date(lastMessage.created_at) > new Date(lastReadAt));
 
                     return {
                         ...contact,
                         last_message_time: lastMessage?.created_at ?? null,
                         last_message_text: lastMessage?.content ?? null,
                         last_message_sender_id: lastMessage?.sender_id ?? null,
-                        last_message_image_url: lastMessage?.image_url ?? null
+                        last_message_image_url: lastMessage?.image_url ?? null,
+                        is_unread: Boolean(is_unread),
                     };
                 })
             );
 
+            // 4) Sort by last_message_time descending
             contactsWithTimestamps.sort((a, b) => {
                 if (!a.last_message_time) return 1;
                 if (!b.last_message_time) return -1;
-                return new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime();
+                return (
+                    new Date(b.last_message_time).getTime() -
+                    new Date(a.last_message_time).getTime()
+                );
             });
 
             setContacts(contactsWithTimestamps);
@@ -77,6 +122,7 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
 
         fetchContacts();
     }, [currentUserId]);
+
 
     // Subscribe to presence updates
     // This will track the online status of users
@@ -107,63 +153,151 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
     // Subscribe to new messages in real-time
     // This will update the contacts list when a new message is sent or received
     useEffect(() => {
-        const channel = supabase.channel('messages-realtime')
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'messages'
-            }, (payload) => {
-                const newMsg = payload.new;
+        const channel = supabase
+            .channel("messages-realtime")
+            .on(
+                "postgres_changes",
+                {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "messages",
+                },
+                (payload) => {
+                    const newMsg = payload.new;
+                    const isIncoming = newMsg.receiver_id === currentUserId;
+                    const isOutgoing = newMsg.sender_id === currentUserId;
 
-                // Only update if currentUser is sender or receiver
-                if (newMsg.sender_id === currentUserId || newMsg.receiver_id === currentUserId) {
-                    setContacts(prevContacts => {
-                        // Identify contact ID (the other user)
-                        const contactId = newMsg.sender_id === currentUserId ? newMsg.receiver_id : newMsg.sender_id;
+                    // Only process if it's related to current user
+                    if (!isIncoming && !isOutgoing) return;
 
-                        let found = false;
-                        const updated = prevContacts.map(contact => {
-                            if (contact.id === contactId) {
-                                found = true;
-                                return {
+                    // Play notification sound only on incoming
+                    if (isIncoming && !isMuted) {
+                        audio.play().catch((err) => {
+                            console.warn("Notification sound could not be played:", err);
+                        });
+                    }
+
+                    // Identify the other party in the conversation
+                    const contactId = isIncoming
+                        ? newMsg.sender_id
+                        : newMsg.receiver_id;
+
+                    setContacts((prevContacts) => {
+                        const updated = prevContacts.map((contact) =>
+                            contact.id === contactId
+                                ? {
                                     ...contact,
                                     last_message_time: newMsg.created_at,
                                     last_message_text: newMsg.content,
                                     last_message_sender_id: newMsg.sender_id,
                                     last_message_image_url: newMsg.image_url,
-                                };
-                            }
-                            return contact;
-                        });
+                                    is_unread: isIncoming ? true : contact.is_unread, // only mark unread on incoming
+                                }
+                                : contact
+                        );
 
-                        if (!found) {
-                            // Optional: if contact is not in the list (unlikely), ignore or fetch new contacts
-                            return prevContacts;
-                        }
-
-                        // Sort by last_message_time desc
                         updated.sort((a, b) => {
                             if (!a.last_message_time) return 1;
                             if (!b.last_message_time) return -1;
-                            return new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime();
+                            return (
+                                new Date(b.last_message_time).getTime() -
+                                new Date(a.last_message_time).getTime()
+                            );
                         });
 
                         return [...updated];
                     });
                 }
-            })
+            )
+
+            // Soft delete handler remains unchanged
+            .on(
+                "postgres_changes",
+                {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "messages",
+                    filter: "deleted=eq.true",
+                },
+                (payload) => {
+                    const updatedMsg = payload.new;
+
+                    setContacts((prevContacts) => {
+                        const updated = prevContacts.map((contact) => {
+                            const isLastMessage =
+                                contact.last_message_sender_id === updatedMsg.sender_id &&
+                                contact.last_message_time === updatedMsg.created_at;
+
+                            if (isLastMessage) {
+                                return {
+                                    ...contact,
+                                    last_message_text: "[message deleted]",
+                                    last_message_image_url: null,
+                                };
+                            }
+
+                            return contact;
+                        });
+
+                        return [...updated];
+                    });
+                }
+            )
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [currentUserId]);
+    }, [currentUserId, isMuted, audio]);
+
 
 
     // Handle contact selection
     // This function is called when a contact is clicked
     const handleSelect = (contact: UserProfile) => {
-        onSelectContact(contact);
+
+        // switch chat immediately
+        startTransition(() => {
+            onSelectContact(contact);
+        });
+
+        // Immediately clear unread flag in UI
+        setContacts((prev) =>
+            prev.map((c) =>
+                c.id === contact.id ? { ...c, is_unread: false } : c
+            )
+        );
+
+        // Debounce the upsert call for this contact
+        const existingTimer = readTimers.current.get(contact.id);
+        if (existingTimer) clearTimeout(existingTimer);
+
+        requestIdleCallback(() => {
+            const timeout = setTimeout(async () => {
+                try {
+                    const { error } = await supabase
+                        .from("message_reads")
+                        .upsert(
+                            {
+                                user_id: currentUserId,
+                                contact_id: contact.id,
+                                last_read_at: new Date().toISOString(),
+                            },
+                            { onConflict: "user_id,contact_id" }
+                        );
+
+                    if (error) {
+                        console.error("Debounced upsert failed:", error);
+                    }
+                } catch (err) {
+                    console.error("Unexpected error during upsert:", err);
+                } finally {
+                    readTimers.current.delete(contact.id);
+                }
+            }, 1500);
+
+            readTimers.current.set(contact.id, timeout);
+        });
     };
 
 
@@ -236,19 +370,38 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                                     <div className="flex-1 min-w-0">
                                         {/* Top row: username + time */}
                                         <div className="flex justify-between items-center">
-                                            <div className="font-medium text-gray-900 dark:text-white truncate w-40">
+                                            <div
+                                                className={`font-medium truncate w-40 ${contact.is_unread
+                                                    ? "text-gray-900 dark:text-white font-semibold"
+                                                    : "text-gray-900 dark:text-white"
+                                                    }`}
+                                            >
                                                 {contact.username}
                                             </div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
-                                                {contact.last_message_time
-                                                    ? formatMessageDate(contact.last_message_time)
-                                                    : ""}
+                                            <div className="flex items-center">
+                                                {contact.is_unread && (
+                                                    <motion.div
+                                                        className="w-2.5 h-2.5 bg-red-500 rounded-full shadow-sm"
+                                                        initial={{ scale: 0.8, opacity: 0 }}
+                                                        animate={{ scale: 1, opacity: 1 }}
+                                                        transition={{ duration: 0.2 }}
+                                                    />
+                                                )}
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-1">
+                                                    {contact.last_message_time
+                                                        ? formatMessageDate(contact.last_message_time)
+                                                        : ""}
+                                                </div>
                                             </div>
                                         </div>
-
                                         {/* Bottom row: message + check icon */}
                                         <div className="flex justify-between items-center mt-1">
-                                            <div className="text-sm text-gray-600 dark:text-gray-400 truncate w-40">
+                                            <div
+                                                className={`text-sm truncate w-40 ${contact.is_unread
+                                                    ? "text-gray-800 dark:text-gray-300 font-semibold"
+                                                    : "text-gray-600 dark:text-gray-400"
+                                                    }`}
+                                            >
                                                 {contact.last_message_image_url ? (
                                                     <span className="italic text-xs text-gray-500 dark:text-gray-400">Image</span>
                                                 ) : contact.last_message_text ? (

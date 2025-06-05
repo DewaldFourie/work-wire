@@ -68,6 +68,7 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
     useEffect(() => {
         const channel = supabase
             .channel("chat-messages")
+            // Listen for new messages
             .on(
                 "postgres_changes",
                 {
@@ -79,11 +80,38 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
                     const newMessage = payload.new as Message;
 
                     const isBetweenCurrentAndContact =
-                        ((newMessage.sender_id === currentUser.id && newMessage.receiver_id === contact.id) ||
-                            (newMessage.sender_id === contact.id && newMessage.receiver_id === currentUser.id));
+                        (newMessage.sender_id === currentUser.id && newMessage.receiver_id === contact.id) ||
+                        (newMessage.sender_id === contact.id && newMessage.receiver_id === currentUser.id);
 
                     if (isBetweenCurrentAndContact && !newMessage.deleted) {
                         setMessages((prev) => [...prev, newMessage]);
+                    }
+                }
+            )
+            // Listen for soft deletes (updates where deleted = true)
+            .on(
+                "postgres_changes",
+                {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "messages",
+                    filter: "deleted=eq.true", // Only interested in deletions
+                },
+                (payload) => {
+                    const updatedMessage = payload.new as Message;
+
+                    const isBetweenCurrentAndContact =
+                        (updatedMessage.sender_id === currentUser.id && updatedMessage.receiver_id === contact.id) ||
+                        (updatedMessage.sender_id === contact.id && updatedMessage.receiver_id === currentUser.id);
+
+                    if (isBetweenCurrentAndContact) {
+                        setMessages((prevMessages) =>
+                            prevMessages.map((msg) =>
+                                msg.id === updatedMessage.id
+                                    ? { ...msg, deleted: true }
+                                    : msg
+                            )
+                        );
                     }
                 }
             )
@@ -93,6 +121,7 @@ const ChatWindow = ({ contact, currentUser, onClose }: Props) => {
             supabase.removeChannel(channel);
         };
     }, [currentUser.id, contact.id]);
+
 
 
     // Scroll to the bottom of the chat window when new messages are added
