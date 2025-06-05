@@ -16,6 +16,9 @@ export default {
       backgroundSize: {
         "100%": "100% 100%",
       },
+      fontFamily: {
+        sans: ["Satoshi", "sans-serif"],
+      },
     },
   },
   plugins: [require("tailwindcss-text-stroke")],
