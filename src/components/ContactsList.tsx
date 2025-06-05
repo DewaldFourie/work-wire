@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef, startTransition } from "react";
 import { supabase } from "../supabase/client";
 import type { UserProfile } from "../types";
-import { User, CheckCheck } from "lucide-react";
+import { User, CheckCheck, MessageSquareDot } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatMessageDate } from "../utils/date";
 import { useSound } from '../contexts/use-sound';
@@ -28,6 +28,8 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
     const { isMuted } = useSound();
     const audio = useMemo(() => new Audio("/sounds/alert.mp3"), []);
     const readTimers = useRef<Map<string, NodeJS.Timeout>>(new Map());
+    const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+
 
     // Fetch contacts and their last message timestamps
     useEffect(() => {
@@ -261,6 +263,10 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
             onSelectContact(contact);
         });
 
+        if (showUnreadOnly && contact.is_unread) {
+            setShowUnreadOnly(false); // Disable unread-only filter
+        }
+
         // Immediately clear unread flag in UI
         setContacts((prev) =>
             prev.map((c) =>
@@ -308,19 +314,35 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
         >
-            <h2 className="text-xl font-semibold flex items-center gap-4">
-                <User className="w-5 h-5 text-gray-700 dark:text-gray-200" />
-                Contacts
-            </h2>
+            <div className="flex justify-between">
+                <h2 className="text-xl font-semibold flex items-center gap-4">
+                    <User className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+                    Contacts
+                </h2>
+                <span className="text-xs text-gray-500 dark:text-gray-400 self-end">
+                    {showUnreadOnly ? 'Showing Unread' : ''}
+                </span>
+            </div>
             <hr className="border-t border-gray-300 dark:border-gray-700 mb-4" />
-            <input
-                type="text"
-                placeholder="Search Contacts..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-[97%] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
-            />
-
+            <div className="flex gap-2">
+                <input
+                    type="text"
+                    placeholder="Search Contacts..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-[90%] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                />
+                <button
+                    onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+                    className={`h-9 w-9 flex items-center justify-center rounded-md border mt-1 transition hover:bg-blue-500 hover:text-white ${showUnreadOnly
+                        ? "bg-blue-500 text-white border-blue-600"
+                        : "bg-transparent dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-400 dark:border-gray-600"
+                        }`}
+                    title={showUnreadOnly ? "Showing unread only" : "Showing all contacts"}
+                >
+                    <MessageSquareDot className="w-4 h-4" />
+                </button>
+            </div>
             {loading ? (
                 <div className="flex flex-col items-center justify-center gap-3 mt-36 text-gray-700 dark:text-gray-300">
                     <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-500" />
@@ -329,11 +351,12 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
             ) : contacts.length === 0 ? (
                 <div className="text-gray-500 dark:text-gray-400">No other users found.</div>
             ) : (
-                <ul className="space-y-2 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
+                <ul className="space-y-2 max-h-[calc(100vh-147px)] overflow-y-auto pr-2">
                     {contacts
                         .filter(contact =>
                             contact.username.toLowerCase().includes(searchTerm.toLowerCase())
                         )
+                        .filter(contact => !showUnreadOnly || contact.is_unread)
                         .map((contact) => {
                             const isActive = contact.id === selectedContactId;
                             const isSentByCurrentUser = contact.last_message_sender_id === currentUserId;

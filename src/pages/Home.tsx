@@ -33,18 +33,20 @@ const Home = () => {
 
 	if (!user || !currentUserProfile) {
 		return (
-			<div className="flex items-center justify-center h-screen">
-				<p className="text-gray-500">Loading your profile...</p>
+			<div className="flex items-center justify-center h-[99%] p-4 bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 from-gray-200 via-white to-gray-300 animate-gradientMove">
+				{/* Empty for clean minimal look */}
 			</div>
 		);
 	}
+
+
 
 	return (
 		<div className="flex h-full ">
 			{/* Left Sidebar: Contacts List */}
 			<div className="w-1/4 border-r border-gray-200 dark:border-gray-700">
-				<ContactsList 
-					currentUserId={user.id} 
+				<ContactsList
+					currentUserId={user.id}
 					onSelectContact={setSelectedContact}
 					selectedContactId={selectedContact?.id || null}
 				/>
@@ -53,13 +55,13 @@ const Home = () => {
 			{/* Right Container: Chat or Welcome */}
 			<div className="flex-1">
 				{selectedContact ? (
-					<ChatWindow 
-						contact={selectedContact} 
-						currentUser={currentUserProfile} 
+					<ChatWindow
+						contact={selectedContact}
+						currentUser={currentUserProfile}
 						onClose={() => setSelectedContact(null)}
 					/>
 				) : (
-					<Welcome contextLabel="contact"/>
+					<Welcome contextLabel="contact" />
 				)}
 			</div>
 		</div>

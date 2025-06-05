@@ -9,6 +9,7 @@ export type UserProfile = {
     profession: string | null;
     skills: string | null;
     about: string | null;
+    is_unread: boolean;
 };
 
 export type Message = {

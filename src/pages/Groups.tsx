@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/auth-context";
 import { supabase } from "../supabase/client";
 import GroupsList from "../components/GroupsList";
-import GroupChatWindow from "../components/GroupChatWindow"; 
+import GroupChatWindow from "../components/GroupChatWindow";
 import Welcome from "../components/Welcome";
 import type { Group, UserProfile } from "../types";
 
@@ -33,8 +33,8 @@ const Groups = () => {
 
 	if (!user || !currentUserProfile) {
 		return (
-			<div className="flex items-center justify-center h-screen">
-				<p className="text-gray-500">Loading your profile...</p>
+			<div className="flex items-center justify-center h-[99%] p-4 bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 from-gray-200 via-white to-gray-300 animate-gradientMove">
+				{/* Empty for clean minimal look */}
 			</div>
 		);
 	}
@@ -59,7 +59,7 @@ const Groups = () => {
 						onClose={() => setSelectedGroup(null)}
 					/>
 				) : (
-					<Welcome contextLabel="group"/>
+					<Welcome contextLabel="group" />
 				)}
 			</div>
 		</div>
