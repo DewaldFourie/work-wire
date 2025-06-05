@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef, startTransition } from "react";
 import { supabase } from "../supabase/client";
 import type { UserProfile } from "../types";
 import { User, CheckCheck } from "lucide-react";
@@ -26,6 +26,8 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
     const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const { isMuted } = useSound();
+    const audio = useMemo(() => new Audio("/sounds/alert.mp3"), []);
+    const readTimers = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
     // Fetch contacts and their last message timestamps
     useEffect(() => {
@@ -169,7 +171,6 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
 
                     if (newMsg.receiver_id === currentUserId) {
                         if (!isMuted) {
-                            const audio = new Audio("/sounds/alert.mp3");
                             audio.play().catch((err) => {
                                 console.warn("Notification sound could not be played:", err);
                             });
@@ -244,30 +245,55 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [currentUserId, isMuted]);
+    }, [currentUserId, isMuted, audio]);
 
 
     // Handle contact selection
     // This function is called when a contact is clicked
-    const handleSelect = async (contact: UserProfile) => {
-        // 1) Upsert “read” timestamp
-        await supabase
-            .from("message_reads")
-            .upsert(
-                { user_id: currentUserId, contact_id: contact.id, last_read_at: new Date().toISOString() },
-                { onConflict: "user_id,contact_id" }
-            );
+    const handleSelect = (contact: UserProfile) => {
 
+        // switch chat immediately
+        startTransition(() => {
+            onSelectContact(contact);
+        });
 
-        // 2) Immediately clear the unread flag for UI
+        // Immediately clear unread flag in UI
         setContacts((prev) =>
             prev.map((c) =>
                 c.id === contact.id ? { ...c, is_unread: false } : c
             )
         );
 
-        // 3) Trigger parent selection (show chat)
-        onSelectContact(contact);
+        // Debounce the upsert call for this contact
+        const existingTimer = readTimers.current.get(contact.id);
+        if (existingTimer) clearTimeout(existingTimer);
+
+        requestIdleCallback(() => {
+            const timeout = setTimeout(async () => {
+                try {
+                    const { error } = await supabase
+                        .from("message_reads")
+                        .upsert(
+                            {
+                                user_id: currentUserId,
+                                contact_id: contact.id,
+                                last_read_at: new Date().toISOString(),
+                            },
+                            { onConflict: "user_id,contact_id" }
+                        );
+
+                    if (error) {
+                        console.error("Debounced upsert failed:", error);
+                    }
+                } catch (err) {
+                    console.error("Unexpected error during upsert:", err);
+                } finally {
+                    readTimers.current.delete(contact.id);
+                }
+            }, 1500);
+
+            readTimers.current.set(contact.id, timeout);
+        });
     };
 
 
