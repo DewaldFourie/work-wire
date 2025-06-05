@@ -153,10 +153,8 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
     // Subscribe to new messages in real-time
     // This will update the contacts list when a new message is sent or received
     useEffect(() => {
-
         const channel = supabase
             .channel("messages-realtime")
-            // Listen for new messages
             .on(
                 "postgres_changes",
                 {
@@ -166,59 +164,64 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
                 },
                 (payload) => {
                     const newMsg = payload.new;
+                    const isIncoming = newMsg.receiver_id === currentUserId;
+                    const isOutgoing = newMsg.sender_id === currentUserId;
 
-                    if (newMsg.sender_id === currentUserId) return;
+                    // Only process if it's related to current user
+                    if (!isIncoming && !isOutgoing) return;
 
-                    if (newMsg.receiver_id === currentUserId) {
-                        if (!isMuted) {
-                            audio.play().catch((err) => {
-                                console.warn("Notification sound could not be played:", err);
-                            });
-                        }
-
-                        setContacts((prevContacts) => {
-                            const contactId = newMsg.sender_id!;
-                            const updated = prevContacts.map((contact) =>
-                                contact.id === contactId
-                                    ? {
-                                        ...contact,
-                                        last_message_time: newMsg.created_at,
-                                        last_message_text: newMsg.content,
-                                        last_message_sender_id: newMsg.sender_id,
-                                        last_message_image_url: newMsg.image_url,
-                                        is_unread: true,
-                                    }
-                                    : contact
-                            );
-
-                            updated.sort((a, b) => {
-                                if (!a.last_message_time) return 1;
-                                if (!b.last_message_time) return -1;
-                                return (
-                                    new Date(b.last_message_time).getTime() -
-                                    new Date(a.last_message_time).getTime()
-                                );
-                            });
-
-                            return [...updated];
+                    // Play notification sound only on incoming
+                    if (isIncoming && !isMuted) {
+                        audio.play().catch((err) => {
+                            console.warn("Notification sound could not be played:", err);
                         });
                     }
+
+                    // Identify the other party in the conversation
+                    const contactId = isIncoming
+                        ? newMsg.sender_id
+                        : newMsg.receiver_id;
+
+                    setContacts((prevContacts) => {
+                        const updated = prevContacts.map((contact) =>
+                            contact.id === contactId
+                                ? {
+                                    ...contact,
+                                    last_message_time: newMsg.created_at,
+                                    last_message_text: newMsg.content,
+                                    last_message_sender_id: newMsg.sender_id,
+                                    last_message_image_url: newMsg.image_url,
+                                    is_unread: isIncoming ? true : contact.is_unread, // only mark unread on incoming
+                                }
+                                : contact
+                        );
+
+                        updated.sort((a, b) => {
+                            if (!a.last_message_time) return 1;
+                            if (!b.last_message_time) return -1;
+                            return (
+                                new Date(b.last_message_time).getTime() -
+                                new Date(a.last_message_time).getTime()
+                            );
+                        });
+
+                        return [...updated];
+                    });
                 }
             )
 
-            // Listen for soft deletes (updates where `deleted` = true)
+            // Soft delete handler remains unchanged
             .on(
                 "postgres_changes",
                 {
                     event: "UPDATE",
                     schema: "public",
                     table: "messages",
-                    filter: "deleted=eq.true", // only updates where deleted=true
+                    filter: "deleted=eq.true",
                 },
                 (payload) => {
                     const updatedMsg = payload.new;
 
-                    // Only update if this message was the last message for a contact
                     setContacts((prevContacts) => {
                         const updated = prevContacts.map((contact) => {
                             const isLastMessage =
@@ -246,6 +249,7 @@ const ContactsList = ({ currentUserId, onSelectContact, selectedContactId }: Pro
             supabase.removeChannel(channel);
         };
     }, [currentUserId, isMuted, audio]);
+
 
 
     // Handle contact selection
