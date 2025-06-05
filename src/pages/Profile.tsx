@@ -285,13 +285,29 @@ export default function Profile() {
                 <X className="h-5 w-5 text-gray-800 dark:text-gray-200" />
             </button>
             {isPrivateAndNotOwn ? (
-                <div className="flex items-center justify-center h-[800px] bg-white dark:bg-gray-900 rounded-xl shadow-lg w-[80%] mx-auto mt-14">
-                    <div className="text-center">
-                        <Lock className="mx-auto mb-4 text-gray-500 dark:text-gray-400" size={40} />
-                        <h2 className="text-xl font-semibold text-gray-800 dark:text-white">This profile is private.</h2>
-                        <p className="text-gray-600 dark:text-gray-400 mt-2">You don't have permission to view this profile.</p>
+                <motion.div
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="w-[80%] h-[800px] mx-auto mt-14 rounded-xl overflow-hidden shadow-xl bg-white dark:bg-gray-900 flex flex-col"
+                >
+                    <div className="relative flex-1 p-12 flex flex-col items-center justify-center gap-6 text-center">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.2, duration: 0.6 }}
+                            className="flex flex-col items-center gap-4"
+                        >
+                            <Lock className="text-gray-500 dark:text-gray-400" size={48} />
+                            <h2 className="text-3xl font-bold text-gray-800 dark:text-white">
+                                This profile is private.
+                            </h2>
+                            <p className="text-gray-600 dark:text-gray-400 max-w-md text-lg">
+                                You don’t have permission to view this user’s profile.
+                            </p>
+                        </motion.div>
                     </div>
-                </div>
+                </motion.div>
             ) : (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -299,10 +315,10 @@ export default function Profile() {
                     transition={{ duration: 0.6, ease: "easeOut" }}
                     className="w-[80%] h-[800px] mx-auto mt-14 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-900 flex flex-col"
                 >
-                    <div className="w-[100%] h-[800px] mx-auto rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-900 flex flex-col">
-                        {/* Cover Image Section - 1/3 */}
+                    <div className="w-full h-full rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-900 flex flex-col">
+
+                        {/* Cover Image Section */}
                         <div className="relative flex-[1.5] h-1/3 min-h-[240px] max-h-[300px] bg-gray-300 dark:bg-gray-700 overflow-visible">
-                            {/* Cover Image */}
                             {profile.cover_image_url && (
                                 <img
                                     src={profile.cover_image_url}
@@ -311,7 +327,6 @@ export default function Profile() {
                                 />
                             )}
 
-                            {/* Edit Cover Button */}
                             {isOwnProfile && (
                                 <button
                                     className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
@@ -322,8 +337,13 @@ export default function Profile() {
                                 </button>
                             )}
 
-                            {/* Profile Picture */}
-                            <div className="absolute bottom-[-75px] left-10 h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-white p-1 shadow-md">
+                            {/* Profile Picture Animation */}
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                transition={{ delay: 0.2, duration: 0.6 }}
+                                className="absolute bottom-[-75px] left-10 h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-white p-1 shadow-md"
+                            >
                                 <img
                                     src={profile.profile_image_url || "/default-image.jpg"}
                                     alt="Profile"
@@ -338,15 +358,18 @@ export default function Profile() {
                                         <Camera size={18} className="text-gray-800 dark:text-gray-200" />
                                     </button>
                                 )}
-                            </div>
+                            </motion.div>
                         </div>
 
-                        {/* Bio Section - 2/3 */}
-                        <div className="flex-[2.5] p-10 overflow-y-auto">
+                        {/* Bio Section */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4, duration: 0.6 }}
+                            className="flex-[2.5] p-10 overflow-y-auto"
+                        >
                             <div className="flex items-start gap-2">
-                                {/* Profile image spacer */}
                                 <div className="w-[12rem] shrink-0" />
-                                {/* User details */}
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                         <h2 className="text-4xl mr-3 font-bold text-gray-900 dark:text-white">{profile.username}</h2>
@@ -358,24 +381,17 @@ export default function Profile() {
                                                 className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
                                                 title="GitHub Profile"
                                             >
-                                                <FaGithub className="w-6 h-6 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white" />
+                                                <FaGithub className="w-6 h-6" />
                                             </a>
                                         )}
                                     </div>
                                     <p className="text-sm mt-2 text-gray-500 dark:text-gray-400">
-                                        Profession:{" "}
-                                        <span className="text-base ml-4 text-gray-700 dark:text-gray-300">
-                                            {profile.profession || "No profession listed"}
-                                        </span>
+                                        Profession: <span className="text-base ml-4 text-gray-700 dark:text-gray-300">{profile.profession || "No profession listed"}</span>
                                     </p>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        Location:{" "}
-                                        <span className="text-base ml-7 text-gray-700 dark:text-gray-300">
-                                            {profile.location || "No location provided"}
-                                        </span>
+                                        Location: <span className="text-base ml-7 text-gray-700 dark:text-gray-300">{profile.location || "No location provided"}</span>
                                     </p>
                                 </div>
-                                {/* Edit button */}
                                 {isOwnProfile && (
                                     <button
                                         className="bg-gray-100 dark:bg-gray-700 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
@@ -385,9 +401,15 @@ export default function Profile() {
                                     </button>
                                 )}
                             </div>
+
                             <hr className="my-6 border-gray-200 dark:border-gray-700" />
-                            <div className="mt-6 relative ">
-                                {/* Edit Button */}
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.6, duration: 0.6 }}
+                                className="mt-6 relative"
+                            >
                                 {isOwnProfile && (
                                     <button
                                         className="absolute top-0 right-0 bg-gray-100 dark:bg-gray-700 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
@@ -398,7 +420,6 @@ export default function Profile() {
                                     </button>
                                 )}
 
-                                {/* Skills Section */}
                                 {profile.skills && profile.skills.trim().length > 0 && (
                                     <div className="mb-6">
                                         <h4 className="font-semibold text-xl text-gray-800 dark:text-white">Skills</h4>
@@ -415,20 +436,23 @@ export default function Profile() {
                                     </div>
                                 )}
 
-                                {/* About Me Section */}
-                                <div>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.8, duration: 0.6 }}
+                                >
                                     <h4 className="font-semibold text-3xl text-gray-800 dark:text-white mb-2">
                                         About Me
                                     </h4>
                                     <p className="text-gray-700 dark:text-gray-300">
                                         {profile.about || "No bio provided"}
                                     </p>
-                                </div>
-                            </div>
-
-                        </div>
+                                </motion.div>
+                            </motion.div>
+                        </motion.div>
                     </div>
                 </motion.div>
+
             )}
             {/* Profile Picture edit Modal */}
             <Modal isOpen={showProfileImageModal} onClose={() => setShowProfileImageModal(false)} maxWidthClass="max-w-md">
