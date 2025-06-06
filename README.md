@@ -5,15 +5,6 @@ WorkWire is a sleek, desktop-first messaging application built with modern web t
 
 ## Demo
 
-<p align="center">
-  <img src="assets/demo/wwChat.png" alt="Chat Interface" width="800"/>
-</p>
-<p align="center">
-  <img src="assets/demo/wwProfile.png" alt="Profile" width="800"/>
-</p>
-<p align="center">
-  <img src="assets/demo/wwGroup.png" alt="Group" width="800"/>
-</p>
 
 
 ## Features
