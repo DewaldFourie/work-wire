@@ -5,6 +5,8 @@ WorkWire is a sleek, desktop-first messaging application built with modern web t
 
 ## [DEMO- (click here to run the demo)](https://work-wire.vercel.app/)
 
+- Use the convenient Demo Account for fast login to test the app
+
 ## Preview
 
 <div align="center">
