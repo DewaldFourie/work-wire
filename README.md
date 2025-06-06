@@ -5,9 +5,11 @@ WorkWire is a sleek, desktop-first messaging application built with modern web t
 
 ## Demo
 
-<img width="1000" alt="work-wire-chat" src="https://github.com/user-attachments/assets/aa84617c-b69c-4ed2-bdf6-81c37f849648">
-<img width="1000" alt="work-wire-profile" src="https://github.com/user-attachments/assets/3ce8603a-f463-4b32-ad15-5ad43f7e9a10">
-<img width="1000" alt="work-wire-groups" src="https://github.com/user-attachments/assets/33d6306e-a21b-48ac-94f3-a6840991ddfe">
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/aa84617c-b69c-4ed2-bdf6-81c37f849648" alt="work-wire-chat" width="32%" style="margin-right: 1%;" />
+  <img src="https://github.com/user-attachments/assets/3ce8603a-f463-4b32-ad15-5ad43f7e9a10" alt="work-wire-profile" width="32%" style="margin-right: 1%;" />
+  <img src="https://github.com/user-attachments/assets/33d6306e-a21b-48ac-94f3-a6840991ddfe" alt="work-wire-groups" width="32%" />
+</div>
 
 
 ## Features
