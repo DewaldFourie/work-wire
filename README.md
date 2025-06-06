@@ -5,6 +5,7 @@ WorkWire is a sleek, desktop-first messaging application built with modern web t
 
 ## Demo
 
+<img width="1422" alt="blog-preview" src="https://github.com/user-attachments/assets/aa84617c-b69c-4ed2-bdf6-81c37f849648">
 
 
 ## Features
