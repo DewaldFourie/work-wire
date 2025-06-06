@@ -1,14 +1,16 @@
 
-# 📨 WorkWire — A Modern Messaging App for Businesses
+# 📨 WorkWire — A Modern Messaging App for Businesses 
 
 WorkWire is a sleek, desktop-first messaging application built with modern web technologies. Designed to offer a clean, WhatsApp-like experience, it supports real-time one-on-one and group messaging, rich user profiles, and a fully responsive dark/light theme toggle — all powered by Supabase, React, and TailwindCSS.
 
-## Demo
+## [DEMO- (click here to run the demo)](https://work-wire.vercel.app/)
+
+## Preview
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/aa84617c-b69c-4ed2-bdf6-81c37f849648" alt="work-wire-chat" width="32%" style="margin-right: 1%;" />
-  <img src="https://github.com/user-attachments/assets/3ce8603a-f463-4b32-ad15-5ad43f7e9a10" alt="work-wire-profile" width="32%" style="margin-right: 1%;" />
-  <img src="https://github.com/user-attachments/assets/33d6306e-a21b-48ac-94f3-a6840991ddfe" alt="work-wire-groups" width="32%" />
+  <img src="https://github.com/user-attachments/assets/aa84617c-b69c-4ed2-bdf6-81c37f849648" alt="work-wire-chat" width="30%" style="margin-right: 5%;" />
+  <img src="https://github.com/user-attachments/assets/3ce8603a-f463-4b32-ad15-5ad43f7e9a10" alt="work-wire-profile" width="30%" style="margin-right: 5%;" />
+  <img src="https://github.com/user-attachments/assets/33d6306e-a21b-48ac-94f3-a6840991ddfe" alt="work-wire-groups" width="30%" />
 </div>
 
 
