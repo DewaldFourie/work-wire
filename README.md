@@ -57,6 +57,7 @@ WorkWire is a sleek, desktop-first messaging application built with modern web t
 - Active state highlighting for current route
 - Animated modals for editing profile fields
 - Responsive layout optimized for desktop use
+- Search and Filter components for top quality UX
 
 ### Real-time Presence
 
